@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Nitipuuy v1.6 — One Account Two Modes</title>
+  <title>Nitipuuy v1.7 — Firebase Authentication</title>
   <style>
     :root {
       --orange: #f98413;
@@ -397,9 +397,50 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
+  
+    /* Firebase authentication layer — v1.7 */
+    .auth-gate{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:rgba(44,24,14,.58);backdrop-filter:blur(12px);overflow:auto}
+    .auth-gate[hidden]{display:none}
+    .auth-card{width:min(100%,440px);padding:28px;border-radius:28px;background:#fffaf3;box-shadow:0 24px 80px rgba(35,18,8,.28);border:1px solid rgba(255,255,255,.7)}
+    .auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}.auth-brand-mark{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#ff9b28,#e96c08);color:white;font-size:25px}
+    .auth-card h2{margin:0 0 6px;font-size:1.65rem;letter-spacing:-.7px}.auth-subtitle{margin:0 0 20px;color:#80543e;line-height:1.5;font-size:.92rem}
+    .auth-field{display:grid;gap:6px;margin:13px 0;color:#5a3020;font-size:.84rem;font-weight:750}.auth-field input{width:100%;padding:13px 14px;border:1px solid #ead7c5;border-radius:13px;background:white;outline:none;color:#3b1b10}.auth-field input:focus{border-color:#f98413;box-shadow:0 0 0 3px rgba(249,132,19,.12)}
+    .auth-btn{width:100%;border:0;border-radius:14px;padding:13px 16px;font-weight:850;transition:transform .18s,opacity .18s}.auth-btn:disabled{opacity:.55;cursor:wait}.auth-btn:hover:not(:disabled){transform:translateY(-1px)}.auth-primary{background:#f98413;color:white;box-shadow:0 7px 16px rgba(233,108,8,.2)}.auth-google{background:white;color:#3b1b10;border:1px solid #ead7c5;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:12px}.google-icon{width:20px;height:20px;flex:0 0 20px;display:block}.auth-secondary{background:transparent;color:#a34d0a;padding:10px;margin-top:8px}
+    .auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:#a17b64;font-size:.78rem}.auth-divider:before,.auth-divider:after{content:"";height:1px;flex:1;background:#ead7c5}.auth-error{display:none;padding:10px 12px;margin:12px 0;border-radius:12px;background:#fff0ed;color:#a32d20;font-size:.83rem;line-height:1.4}.auth-error.show{display:block}.auth-note{margin:14px 0 0;color:#9b806d;font-size:.73rem;line-height:1.45;text-align:center}
+    .account-chip{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:9px 12px;border-radius:999px;background:#fff;border:1px solid #ead7c5;color:#80543e;font-size:.78rem;font-weight:750}.signout-btn{border:1px solid #ead7c5;background:#fff;color:#80543e;border-radius:12px;padding:9px 11px;font-weight:750;font-size:.78rem}
+    @media(max-width:520px){.auth-card{padding:23px 19px;border-radius:23px}.auth-gate{padding:12px}}
+
   </style>
 </head>
 <body>
+
+  <section class="auth-gate" id="authGate" aria-label="Masuk ke Nitipuuy">
+    <div class="auth-card">
+      <div class="auth-brand"><div class="auth-brand-mark">🛍️</div><div><div class="brand-name">nitipuuy<span style="color:var(--orange)">.</span></div><div class="brand-tag">Kamu pilih, kami yang gerak!</div></div></div>
+      <h2 id="authHeading">Selamat datang!</h2>
+      <p class="auth-subtitle" id="authSubtitle">Masuk untuk menggunakan Nitipuuy sebagai Pembeli atau Mitra.</p>
+      <div class="auth-error" id="authError" role="alert"></div>
+      <form id="emailAuthForm">
+        <label class="auth-field">Alamat email<input id="authEmail" type="email" autocomplete="email" placeholder="nama@email.com" required maxlength="254"></label>
+        <label class="auth-field">Kata sandi<input id="authPassword" type="password" autocomplete="current-password" placeholder="Minimal 6 karakter" required minlength="6"></label>
+        <button class="auth-btn auth-primary" id="emailAuthSubmit" type="submit">Masuk dengan Email</button>
+      </form>
+      <button class="auth-btn auth-secondary" id="authToggleMode" type="button">Belum punya akun? Daftar</button>
+      <div class="auth-divider">atau</div>
+      <button class="auth-btn auth-google" id="googleAuthButton" type="button" aria-label="Lanjutkan dengan Google">
+        <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" transform="translate(0 4)"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.76 7.18l7.73 6C44.42 37.98 46.98 31.8 46.98 24.55z"/>
+          <path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19z" transform="translate(0 0)"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.14 1.44-4.89 2.3-8.18 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        <span>Lanjutkan dengan Google</span>
+      </button>
+      <button class="auth-btn auth-secondary" id="forgotPasswordButton" type="button">Lupa kata sandi?</button>
+      <p class="auth-note">Dengan melanjutkan, kamu menggunakan akun untuk mengakses layanan Nitipuuy. Jangan gunakan kata sandi yang sama dengan akun penting lainnya.</p>
+    </div>
+  </section>
+
   <main class="app-shell">
     <div class="home-content" id="homeContent">
     <header class="topbar">
@@ -643,12 +684,116 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script>
     const toast = document.getElementById('toast');
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modalTitle');
     const modalText = document.getElementById('modalText');
     let toastTimer;
+
+    // Firebase Authentication (v1.7). Database remains locked until secure rules are deployed.
+    const firebaseConfig = {
+      apiKey: "AIzaSyCN10a81vb2miDx4ScYgxuDS_W3OxM1AB0",
+      authDomain: "nitipuuy.firebaseapp.com",
+      databaseURL: "https://nitipuuy-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nitipuuy",
+      storageBucket: "nitipuuy.firebasestorage.app",
+      messagingSenderId: "179809248695",
+      appId: "1:179809248695:web:050b56643ead608d597432"
+    };
+    let firebaseAuth = null;
+    let currentFirebaseUser = null;
+    let authIsRegister = false;
+    const authGate = document.getElementById('authGate');
+    const authError = document.getElementById('authError');
+    const authForm = document.getElementById('emailAuthForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authSubmit = document.getElementById('emailAuthSubmit');
+    const authToggle = document.getElementById('authToggleMode');
+    const googleButton = document.getElementById('googleAuthButton');
+    const forgotButton = document.getElementById('forgotPasswordButton');
+    function authMessage(message){ authError.textContent=message; authError.classList.add('show'); }
+    function clearAuthMessage(){ authError.textContent=''; authError.classList.remove('show'); }
+    function friendlyAuthError(error){
+      const code=error && error.code || '';
+      const messages={
+        'auth/invalid-email':'Format email tidak valid.',
+        'auth/user-not-found':'Akun tidak ditemukan. Silakan daftar terlebih dahulu.',
+        'auth/wrong-password':'Kata sandi salah.',
+        'auth/invalid-credential':'Email atau kata sandi tidak sesuai.',
+        'auth/email-already-in-use':'Email sudah terdaftar. Silakan masuk.',
+        'auth/weak-password':'Kata sandi terlalu lemah. Gunakan minimal 6 karakter.',
+        'auth/popup-closed-by-user':'Jendela login Google ditutup sebelum selesai.',
+        'auth/popup-blocked':'Popup diblokir browser. Izinkan popup atau coba lagi.',
+        'auth/unauthorized-domain':'Domain belum diizinkan di Firebase Authentication → Settings → Authorized domains.',
+        'auth/network-request-failed':'Koneksi internet bermasalah. Periksa jaringan lalu coba lagi.',
+        'auth/too-many-requests':'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.'
+      };
+      return messages[code] || ('Login gagal: '+(error && error.message ? error.message : 'Kesalahan tidak diketahui.'));
+    }
+    function setAuthBusy(busy){ [authSubmit,googleButton,authToggle,forgotButton].forEach(b=>b.disabled=busy); }
+    function updateAuthMode(){
+      document.getElementById('authHeading').textContent=authIsRegister?'Buat akun Nitipuuy':'Selamat datang!';
+      document.getElementById('authSubtitle').textContent=authIsRegister?'Daftar dengan email dan kata sandi untuk mulai menggunakan Nitipuuy.':'Masuk untuk menggunakan Nitipuuy sebagai Pembeli atau Mitra.';
+      authSubmit.textContent=authIsRegister?'Daftar dengan Email':'Masuk dengan Email';
+      authToggle.textContent=authIsRegister?'Sudah punya akun? Masuk':'Belum punya akun? Daftar';
+      forgotButton.style.display=authIsRegister?'none':'';
+      authPassword.autocomplete=authIsRegister?'new-password':'current-password';
+      clearAuthMessage();
+    }
+    authToggle.addEventListener('click',()=>{authIsRegister=!authIsRegister;updateAuthMode();});
+    authForm.addEventListener('submit',async event=>{
+      event.preventDefault(); clearAuthMessage();
+      if(!firebaseAuth){authMessage('Firebase belum siap. Muat ulang halaman dan periksa koneksi internet.');return;}
+      const email=authEmail.value.trim(); const password=authPassword.value;
+      setAuthBusy(true);
+      try{
+        if(authIsRegister) await firebaseAuth.createUserWithEmailAndPassword(email,password);
+        else await firebaseAuth.signInWithEmailAndPassword(email,password);
+      }catch(error){authMessage(friendlyAuthError(error));}
+      finally{setAuthBusy(false);}
+    });
+    googleButton.addEventListener('click',async()=>{
+      clearAuthMessage(); if(!firebaseAuth){authMessage('Firebase belum siap. Muat ulang halaman.');return;}
+      setAuthBusy(true);
+      try{const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});await firebaseAuth.signInWithPopup(provider);}
+      catch(error){authMessage(friendlyAuthError(error));}
+      finally{setAuthBusy(false);}
+    });
+    forgotButton.addEventListener('click',async()=>{
+      clearAuthMessage(); const email=authEmail.value.trim();
+      if(!email){authMessage('Masukkan alamat email terlebih dahulu untuk menerima tautan reset kata sandi.');authEmail.focus();return;}
+      try{await firebaseAuth.sendPasswordResetEmail(email);authMessage('Tautan reset kata sandi sudah dikirim. Periksa kotak masuk atau folder spam email kamu.');}
+      catch(error){authMessage(friendlyAuthError(error));}
+    });
+    function installAccountControls(user){
+      const topActions=document.querySelector('.top-actions');
+      if(!topActions)return;
+      let chip=document.getElementById('firebaseAccountChip');
+      if(!chip){chip=document.createElement('span');chip.id='firebaseAccountChip';chip.className='account-chip';chip.title='Akun yang sedang masuk';topActions.appendChild(chip);}
+      chip.textContent=user.displayName || user.email || 'Akun Nitipuuy';
+      let out=document.getElementById('firebaseSignOut');
+      if(!out){out=document.createElement('button');out.id='firebaseSignOut';out.type='button';out.className='signout-btn';out.textContent='Keluar';topActions.appendChild(out);out.addEventListener('click',async()=>{try{await firebaseAuth.signOut();}catch(e){showToast(friendlyAuthError(e));}});}
+    }
+    function removeAccountControls(){document.getElementById('firebaseAccountChip')?.remove();document.getElementById('firebaseSignOut')?.remove();}
+    try{
+      if(!window.firebase || !firebase.initializeApp) throw new Error('Firebase SDK tidak berhasil dimuat. Periksa koneksi internet atau pemblokir konten.');
+      if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      firebaseAuth=firebase.auth();
+      firebaseAuth.onAuthStateChanged(user=>{
+        currentFirebaseUser=user||null;
+        if(user){
+          authGate.hidden=true; installAccountControls(user);
+          try{const existing=JSON.parse(localStorage.getItem('nitipuuy_profile')||'{}');localStorage.setItem('nitipuuy_profile',JSON.stringify({...existing,name:existing.name||user.displayName||'',email:user.email||existing.email||''}));}catch{}
+          if(typeof renderProfile==='function') renderProfile();
+        }else{
+          authGate.hidden=false; removeAccountControls();
+        }
+      });
+    }catch(error){authGate.hidden=false;authMessage(error.message||'Firebase gagal dimulai.');}
 
     function showToast(message) {
       toast.textContent = message;
@@ -945,7 +1090,7 @@
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Nitipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Nitipuuy','Nitipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 1.6 · Dual mode frontend demo · Profil, alamat, keranjang, dan pesanan disimpan lokal di browser dan belum tersinkron ke server.'); }
+    function openAbout() { showModal('Tentang Nitipuuy','Nitipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 1.7 · Firebase Authentication aktif. Profil, alamat, keranjang, dan pesanan masih tersimpan lokal; sinkronisasi database sedang disiapkan.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
