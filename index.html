@@ -1003,7 +1003,7 @@
           const submit=document.getElementById('placeOrder');submit.disabled=true;submit.textContent='Mengirim pesanan…';
           try{const now=new Date();const orderRef=firebaseDb.ref('orders').push();const id='TT-'+now.getFullYear()+'-'+orderRef.key.slice(-6).toUpperCase();
             const order={id,buyerUid:currentFirebaseUser.uid,mitraUid:null,date:now.toLocaleString('id-ID'),createdAt:firebase.database.ServerValue.TIMESTAMP,updatedAt:firebase.database.ServerValue.TIMESTAMP,name:cart.map(x=>x.name+' × '+x.qty).join(', '),place:'Beberapa tempat',emoji:'🛍️',total:subtotal(),status:'Menunggu mitra',payment:localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)',customerNote:checkoutNote,note:'Pesanan baru dibuat. Menunggu mitra menerima.',steps:['Pesanan dibuat','Menunggu mitra menerima pesanan'],address:a,items:cart.map(x=>({...x}))};
-            const board={id,mitraUid:null,name:order.name,place:order.place,total:order.total,status:order.status,createdAt:firebase.database.ServerValue.TIMESTAMP};
+            const board={id,buyerUid:currentFirebaseUser.uid,mitraUid:null,name:order.name,place:order.place,total:order.total,status:order.status,createdAt:firebase.database.ServerValue.TIMESTAMP};
             const updates={};updates['orders/'+orderRef.key]=order;updates['ordersByBuyer/'+currentFirebaseUser.uid+'/'+orderRef.key]=order;updates['orderBoard/'+orderRef.key]=board;await firebaseDb.ref().update(updates);
             const saved=getRealOrders();saved.unshift({...order,_key:orderRef.key});saveRealOrders(saved);cart=[];checkoutNote='';persistCart();closeCheckout();showToast('Pesanan '+id+' berhasil dikirim ke Firebase!');navigateTo('Pesanan');renderOrders();
           }catch(error){console.error('Gagal membuat pesanan cloud:',error);showToast(error.code==='PERMISSION_DENIED'?'Akses pesanan ditolak. Periksa Firebase Security Rules v2.0.':'Pesanan gagal dikirim. Periksa koneksi lalu coba lagi.');}
@@ -1218,7 +1218,7 @@
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Titipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 1.9 · Firebase Authentication, sinkronisasi profil, dan pengaturan role aktif. Alamat, keranjang, dan pesanan masih tersimpan lokal.'); }
+    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.0.1 · Firebase Authentication, sinkronisasi profil, role Pembeli/Mitra, dan pesanan realtime.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
