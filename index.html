@@ -1006,7 +1006,7 @@
             const board={id,buyerUid:currentFirebaseUser.uid,mitraUid:null,name:order.name,place:order.place,total:order.total,status:order.status,createdAt:firebase.database.ServerValue.TIMESTAMP};
             const updates={};updates['orders/'+orderRef.key]=order;updates['ordersByBuyer/'+currentFirebaseUser.uid+'/'+orderRef.key]=order;updates['orderBoard/'+orderRef.key]=board;await firebaseDb.ref().update(updates);
             const saved=getRealOrders();saved.unshift({...order,_key:orderRef.key});saveRealOrders(saved);cart=[];checkoutNote='';persistCart();closeCheckout();showToast('Pesanan '+id+' berhasil dikirim ke Firebase!');navigateTo('Pesanan');renderOrders();
-          }catch(error){console.error('Gagal membuat pesanan cloud:',error);showToast(error.code==='PERMISSION_DENIED'?'Akses pesanan ditolak. Periksa Firebase Security Rules v2.0.':'Pesanan gagal dikirim. Periksa koneksi lalu coba lagi.');}
+          }catch(error){console.error('Gagal membuat pesanan cloud:',error);showToast(error.code==='PERMISSION_DENIED'?'Firebase menolak penyimpanan. Periksa Rules v2.1 yang disediakan.':(error.message||'Pesanan gagal dikirim. Periksa koneksi lalu coba lagi.'));}
           finally{submit.disabled=false;submit.textContent='Buat pesanan';}
         };
       }
@@ -1077,16 +1077,24 @@
       if(!firebaseDb||!currentFirebaseUser)return;const boardRef=firebaseDb.ref('orderBoard/'+key);
       try{
         if(action==='accept'){
+          // Ambil buyerUid dari papan publik yang memang hanya berisi ringkasan pesanan.
+          const boardSnap=await boardRef.once('value');const boardBefore=boardSnap.val();
+          if(!boardBefore||!boardBefore.buyerUid)throw new Error('Ringkasan pesanan tidak ditemukan.');
+          // Transaksi atomik mencegah dua Mitra mengambil pesanan yang sama.
           const result=await boardRef.transaction(current=>{if(!current||current.mitraUid||current.status!=='Menunggu mitra')return;current.mitraUid=currentFirebaseUser.uid;current.status='Diterima';return current;});
           if(!result.committed){showToast('Pesanan sudah diambil Mitra lain.');return;}
-          const privateRef=firebaseDb.ref('orders/'+key);const privateSnap=await privateRef.once('value');const privateOrder=privateSnap.val();if(!privateOrder)throw new Error('Data pesanan tidak ditemukan.');const steps=Array.isArray(privateOrder.steps)?privateOrder.steps:[];steps.push('Mitra menerima pesanan');const changes={mitraUid:currentFirebaseUser.uid,status:'Diterima',note:'Mitra menerima pesanan.',updatedAt:firebase.database.ServerValue.TIMESTAMP,steps};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+privateOrder.buyerUid+'/'+key).update(changes);
+          // Tidak membaca data privat sebelum klaim: sesudah klaim, UID Mitra sudah tercatat.
+          const changes={mitraUid:currentFirebaseUser.uid,status:'Diterima',note:'Mitra menerima pesanan.',updatedAt:firebase.database.ServerValue.TIMESTAMP};
+          const privateRef=firebaseDb.ref('orders/'+key);
+          await privateRef.update(changes);
+          await firebaseDb.ref('ordersByBuyer/'+boardBefore.buyerUid+'/'+key).update(changes);
         }else{
           const map={prepare:['Disiapkan','Mitra mulai menyiapkan pesanan'],deliver:['Dalam perjalanan','Mitra mulai mengantar pesanan'],complete:['Selesai','Pesanan berhasil diselesaikan']};const next=map[action];if(!next)return;
           const privateRef=firebaseDb.ref('orders/'+key);const snap=await privateRef.once('value');const order=snap.val();if(!order||order.mitraUid!==currentFirebaseUser.uid){showToast('Pesanan ini bukan tanggung jawab akunmu.');return;}
           const steps=Array.isArray(order.steps)?order.steps:[];steps.push(next[1]);const changes={status:next[0],note:next[1]+'.',steps,updatedAt:firebase.database.ServerValue.TIMESTAMP};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+order.buyerUid+'/'+key).update(changes);await boardRef.update({status:next[0]});
         }
         showToast(action==='accept'?'Pesanan berhasil diambil. Detail alamat tersedia di pesananmu.':'Status pesanan diperbarui.');
-      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast('Perubahan gagal. Periksa Firebase Security Rules v2.0.');}
+      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast(error.code==='PERMISSION_DENIED'?'Firebase menolak perubahan. Periksa Rules v2.1.':(error.message||'Perubahan pesanan gagal.'));}
     }
     document.getElementById('switchBuyer').addEventListener('click',async()=>{
       const button=document.getElementById('switchBuyer'); button.disabled=true;
