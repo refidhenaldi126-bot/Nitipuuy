@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v2.0 — Realtime Order System</title>
+  <title>Titipuuy v2.2 — Realtime Chat & Foto</title>
   <style>
     :root {
       --orange: #f98413;
@@ -432,6 +432,28 @@
     .role-choice span{display:grid;gap:4px}.role-choice b{font-size:.95rem}.role-choice small{color:var(--muted);font-size:.78rem;line-height:1.45}
     .profile-note{border-radius:16px}
     .profile-form button:disabled{opacity:.6;cursor:wait}
+
+    /* Titipuuy v2.2 — ruang chat per pesanan */
+    .chat-backdrop{position:fixed;inset:0;z-index:1200;background:rgba(45,24,13,.48);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:14px}
+    .chat-backdrop.show{display:flex}
+    .chat-panel{width:min(100%,560px);height:min(88vh,760px);background:#fffaf4;border:1px solid rgba(255,255,255,.7);border-radius:24px;box-shadow:0 25px 80px rgba(50,24,8,.28);display:flex;flex-direction:column;overflow:hidden}
+    .chat-head{display:flex;align-items:center;gap:12px;padding:16px 18px;background:linear-gradient(120deg,#ff9c2b,#e96c08);color:white}
+    .chat-avatar{width:42px;height:42px;border-radius:15px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:1.25rem}
+    .chat-head-copy{min-width:0;flex:1}.chat-head-copy b{display:block}.chat-head-copy small{opacity:.9}.chat-close{width:38px;height:38px;border:0;border-radius:12px;background:rgba(255,255,255,.18);color:#fff;font-size:1.5rem}
+    .chat-order-strip{padding:9px 16px;background:#fff0dc;color:#80543e;font-size:.78rem;font-weight:750;border-bottom:1px solid #f4dfc9}
+    .chat-messages{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(circle at 10% 5%,rgba(249,132,19,.07),transparent 35%),#fffaf4}
+    .chat-empty{margin:auto;text-align:center;color:#a17b64;font-size:.9rem;line-height:1.6}
+    .chat-bubble{max-width:82%;padding:10px 12px;border-radius:17px;background:#fff;border:1px solid #f1e4d8;box-shadow:0 4px 12px rgba(80,45,20,.05);align-self:flex-start;overflow-wrap:anywhere}
+    .chat-bubble.mine{align-self:flex-end;background:#fff0dc;border-color:#f8d5aa;border-bottom-right-radius:5px}
+    .chat-bubble.theirs{border-bottom-left-radius:5px}.chat-bubble p{margin:0;white-space:pre-wrap;font-size:.9rem;line-height:1.45}.chat-time{display:block;text-align:right;color:#a17b64;font-size:.66rem;margin-top:5px}
+    .chat-photo{display:block;max-width:100%;max-height:260px;object-fit:cover;border-radius:11px;margin-bottom:6px;cursor:zoom-in}
+    .chat-compose{padding:12px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid #f1e4d8;background:#fff}
+    .chat-compose textarea{flex:1;resize:none;min-height:42px;max-height:110px;border:1px solid #ead8c7;border-radius:14px;padding:11px 12px;outline:none;color:#3b1b10;background:#fffaf4}
+    .chat-compose button{height:42px;min-width:44px;border:0;border-radius:13px;background:#f98413;color:white;font-weight:800}.chat-compose button:disabled{opacity:.5;cursor:not-allowed}
+    .chat-compose .chat-attach{background:#fff0dc;color:#a94f08;font-size:1.1rem}.chat-readonly{padding:12px;text-align:center;color:#98765e;background:#fff0dc;font-size:.82rem}
+    .chat-action-btn{border:0;border-radius:12px;padding:10px 13px;background:#fff0dc;color:#a94f08;font-weight:800;margin-top:10px}
+    @media(max-width:560px){.chat-backdrop{padding:0}.chat-panel{width:100%;height:100dvh;max-height:100dvh;border-radius:0}.chat-bubble{max-width:88%}}
+
   </style>
 </head>
 <body>
@@ -700,6 +722,16 @@
       <p id="modalText">Fitur ini sedang disiapkan dalam prototipe.</p>
       <div class="modal-actions"><button class="secondary-button" id="closeModal">Tutup</button><button class="primary-button" id="modalOk">Mengerti</button></div>
     </div>
+  </div>
+
+
+  <div class="chat-backdrop" id="chatBackdrop" aria-hidden="true">
+    <section class="chat-panel" role="dialog" aria-modal="true" aria-label="Chat pesanan">
+      <header class="chat-head"><div class="chat-avatar">💬</div><div class="chat-head-copy"><b id="chatPartnerName">Chat pesanan</b><small id="chatPartnerRole">Pembeli ↔ Mitra</small></div><button class="chat-close" id="chatClose" aria-label="Tutup chat">×</button></header>
+      <div class="chat-order-strip" id="chatOrderStrip">Memuat detail pesanan…</div>
+      <div class="chat-messages" id="chatMessages"><div class="chat-empty">Memuat percakapan…</div></div>
+      <div id="chatComposerWrap" class="chat-compose"><button type="button" class="chat-attach" id="chatAttach" title="Kirim foto">＋</button><input type="file" id="chatPhotoInput" accept="image/*" hidden><textarea id="chatInput" rows="1" placeholder="Tulis pesan…" maxlength="1200"></textarea><button type="button" id="chatSend">Kirim</button></div>
+    </section>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -1027,12 +1059,13 @@
       const filtered = allOrders.filter(order => activeOrderFilter === 'Semua' || order.status === activeOrderFilter);
       list.innerHTML = filtered.length ? filtered.map(order => {
         const statusClass = order.status === 'Selesai' ? 'done' : '';
-        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button></div></article>`;
+        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button>${order.mitraUid && order._key ? `<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(order._key)}">💬 Chat Mitra</button>` : ''}</div></article>`;
       }).join('') : `<div class="orders-empty"><div class="empty-emoji">🛍️</div><strong>Belum ada pesanan ${activeOrderFilter.toLowerCase()}</strong><p>Pesanan dengan status ini akan muncul di sini.</p></div>`;
       list.querySelectorAll('[data-order-detail]').forEach(button => button.addEventListener('click', () => {
         const order = allOrders.find(item => item.id === button.dataset.orderDetail);
         showModal(`Detail ${order.id}`, `${order.name}\n${order.place}\nStatus: ${order.status}\nTotal: ${rupiah(order.total)}\n\n${order.steps.map((step,index) => `${index+1}. ${step}`).join('\n')}\n\n${order.note}`);
       }));
+      list.querySelectorAll('[data-open-chat]').forEach(button=>button.addEventListener('click',()=>openOrderChat(button.dataset.openChat,'buyer')));
     }
     document.querySelectorAll('[data-order-filter]').forEach(button => button.addEventListener('click', () => {
       activeOrderFilter = button.dataset.orderFilter;
@@ -1070,8 +1103,8 @@
       document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
       const list=document.getElementById('mitraOrderList');
       const cards=[...incoming.map(o=>({...o,_incoming:true})),...cloudMitraOrders];
-      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o._key)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
-      list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));
+      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o._key)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div>${!o._incoming?`<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(o._key)}">💬 Chat Pembeli</button>`:''}</article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
+      list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));list.querySelectorAll('[data-open-chat]').forEach(btn=>btn.addEventListener('click',()=>openOrderChat(btn.dataset.openChat,'mitra')));
     }
     async function updateMitraOrder(key,action){
       if(!firebaseDb||!currentFirebaseUser)return;const boardRef=firebaseDb.ref('orderBoard/'+key);
@@ -1096,6 +1129,55 @@
         showToast(action==='accept'?'Pesanan berhasil diambil. Detail alamat tersedia di pesananmu.':'Status pesanan diperbarui.');
       }catch(error){console.error('Perubahan pesanan gagal:',error);showToast(error.code==='PERMISSION_DENIED'?'Firebase menolak perubahan. Periksa Rules v2.1.':(error.message||'Perubahan pesanan gagal.'));}
     }
+    // CHAT PER PESANAN — pesan dan foto terkompresi disimpan pada Realtime Database.
+    // Foto dibatasi agar ukuran payload tetap kecil untuk prototipe. Untuk produksi,
+    // pindahkan media ke Firebase Storage dengan otorisasi peserta berbasis backend tepercaya.
+    const chatBackdrop=document.getElementById('chatBackdrop');
+    let activeChatKey=null, activeChatRole=null, activeChatOrder=null, chatListenerRef=null;
+    const chatMessagesEl=document.getElementById('chatMessages');
+    function closeOrderChat(){if(chatListenerRef){chatListenerRef.off('value',renderChatMessages);chatListenerRef=null;}activeChatKey=null;activeChatOrder=null;chatBackdrop.classList.remove('show');chatBackdrop.setAttribute('aria-hidden','true');}
+    document.getElementById('chatClose').addEventListener('click',closeOrderChat);
+    chatBackdrop.addEventListener('click',e=>{if(e.target===chatBackdrop)closeOrderChat();});
+    function chatTime(ts){try{return new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts||Date.now()));}catch{return '';}}
+    function renderChatMessages(snapshot){
+      const rows=Object.entries(snapshot.val()||{}).map(([id,m])=>({...m,_id:id})).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+      if(!rows.length){chatMessagesEl.innerHTML='<div class="chat-empty">Belum ada pesan.<br>Mulai percakapan dengan menyapa 👋</div>';return;}
+      chatMessagesEl.innerHTML=rows.map(m=>{const mine=m.senderUid===currentFirebaseUser.uid;const body=m.type==='image'?`<img class="chat-photo" src="${m.imageData}" alt="Foto dari ${mine?'Anda':'lawan bicara'}" loading="lazy">${m.caption?`<p>${escapeHtml(m.caption)}</p>`:''}`:`<p>${escapeHtml(m.text||'')}</p>`;return `<article class="chat-bubble ${mine?'mine':'theirs'}">${body}<small class="chat-time">${chatTime(m.timestamp)}</small></article>`;}).join('');
+      chatMessagesEl.querySelectorAll('.chat-photo').forEach(img=>img.addEventListener('click',()=>{const w=window.open();if(w){w.document.write(`<img src="${img.src}" style="max-width:100%;height:auto">`);w.document.title='Foto Titipuuy';}}));
+      chatMessagesEl.scrollTop=chatMessagesEl.scrollHeight;
+    }
+    async function openOrderChat(key,side){
+      if(!firebaseDb||!currentFirebaseUser){showToast('Silakan login untuk membuka chat.');return;}
+      try{
+        const path=side==='buyer'?'ordersByBuyer/'+currentFirebaseUser.uid+'/'+key:'orders/'+key;
+        const snap=await firebaseDb.ref(path).once('value');const order=snap.val();
+        if(!order)throw new Error('Pesanan tidak ditemukan atau akses belum diizinkan.');
+        if(!order.mitraUid||!order.buyerUid)throw new Error('Chat aktif setelah Mitra menerima pesanan.');
+        if(side==='buyer'&&order.buyerUid!==currentFirebaseUser.uid)throw new Error('Pesanan bukan milik akun ini.');
+        if(side==='mitra'&&order.mitraUid!==currentFirebaseUser.uid)throw new Error('Pesanan bukan tanggung jawab akun ini.');
+        activeChatKey=key;activeChatRole=side;activeChatOrder=order;
+        document.getElementById('chatPartnerName').textContent=side==='buyer'?'Chat dengan Mitra':'Chat dengan Pembeli';
+        document.getElementById('chatPartnerRole').textContent=side==='buyer'?'Mitra pesanan':'Pembeli pesanan';
+        document.getElementById('chatOrderStrip').textContent=`${order.id||key} · ${order.status||'Pesanan aktif'} · ${order.name||'Titipan'}`;
+        const readonly=order.status==='Selesai';document.getElementById('chatComposerWrap').style.display=readonly?'none':'flex';
+        let ro=document.getElementById('chatReadonly');if(readonly){if(!ro){ro=document.createElement('div');ro.id='chatReadonly';ro.className='chat-readonly';chatBackdrop.querySelector('.chat-panel').appendChild(ro);}ro.textContent='Pesanan selesai. Riwayat chat hanya dapat dibaca.';}else if(ro)ro.remove();
+        chatBackdrop.classList.add('show');chatBackdrop.setAttribute('aria-hidden','false');
+        if(chatListenerRef)chatListenerRef.off('value',renderChatMessages);
+        chatListenerRef=firebaseDb.ref('orderChats/'+key+'/messages');chatListenerRef.on('value',renderChatMessages,err=>{console.error('Chat listener:',err);showToast('Chat tidak dapat dimuat. Periksa Firebase Rules chat.');});
+      }catch(err){console.error('Buka chat gagal:',err);showToast(err.message||'Chat belum dapat dibuka.');}
+    }
+    async function sendChatMessage(payload){
+      if(!activeChatKey||!activeChatOrder||!currentFirebaseUser)throw new Error('Ruang chat belum aktif.');
+      if(activeChatOrder.status==='Selesai')throw new Error('Pesanan selesai; chat hanya dapat dibaca.');
+      const node={...payload,senderUid:currentFirebaseUser.uid,timestamp:firebase.database.ServerValue.TIMESTAMP};
+      await firebaseDb.ref('orderChats/'+activeChatKey+'/messages').push(node);
+    }
+    document.getElementById('chatSend').addEventListener('click',async()=>{const input=document.getElementById('chatInput');const value=input.value.trim();if(!value)return;const btn=document.getElementById('chatSend');btn.disabled=true;try{await sendChatMessage({type:'text',text:value});input.value='';}catch(err){console.error(err);showToast('Pesan gagal dikirim. Periksa Rules Firebase chat.');}finally{btn.disabled=false;input.focus();}});
+    document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('chatSend').click();}});
+    function compressChatImage(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/'))return reject(new Error('Pilih file gambar.'));if(file.size>8*1024*1024)return reject(new Error('Ukuran foto maksimal 8 MB.'));const reader=new FileReader();reader.onerror=()=>reject(new Error('Foto tidak dapat dibaca.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Format foto tidak didukung.'));img.onload=()=>{const scale=Math.min(1,900/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',.68);if(data.length>420000) return reject(new Error('Foto masih terlalu besar setelah kompresi. Pilih foto lain.'));resolve(data);};img.src=reader.result;};reader.readAsDataURL(file);});}
+    document.getElementById('chatAttach').addEventListener('click',()=>document.getElementById('chatPhotoInput').click());
+    document.getElementById('chatPhotoInput').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const btn=document.getElementById('chatAttach');btn.disabled=true;try{const imageData=await compressChatImage(file);const caption=prompt('Tambahkan keterangan foto (opsional):')||'';await sendChatMessage({type:'image',imageData,caption:caption.slice(0,180)});showToast('Foto berhasil dikirim.');}catch(err){console.error(err);showToast(err.message||'Foto gagal dikirim.');}finally{btn.disabled=false;e.target.value='';}});
+
     document.getElementById('switchBuyer').addEventListener('click',async()=>{
       const button=document.getElementById('switchBuyer'); button.disabled=true;
       try { await saveCloudRole('Pembeli'); localStorage.setItem(ROLE_KEY,'Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif dan tersimpan.'); }
@@ -1226,7 +1308,7 @@
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Titipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.0.1 · Firebase Authentication, sinkronisasi profil, role Pembeli/Mitra, dan pesanan realtime.'); }
+    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.2 · Firebase Authentication, pesanan realtime, chat per pesanan, dan kirim foto terkompresi.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
