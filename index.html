@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f98413" />
+  <title>Nitipuuy v1.6 — One Account Two Modes</title>
+  <style>
+    :root {
+      --orange: #f98413;
+      --orange-dark: #e96c08;
+      --orange-soft: #fff0dc;
+      --cream: #fff6e9;
+      --cream-deep: #ffebcf;
+      --peach: #ffe2b7;
+      --brown: #3b1b10;
+      --brown-soft: #80543e;
+      --muted: #a17b64;
+      --white: #fff;
+      --green: #19a95b;
+      --shadow: 0 12px 32px rgba(117, 62, 20, .10);
+      --shadow-small: 0 5px 16px rgba(117, 62, 20, .09);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 15px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--brown);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(249,132,19,.12), transparent 28rem),
+        var(--cream);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { width: min(100%, 1180px); margin: auto; padding: 22px 26px 110px; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+      margin-bottom: 28px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark {
+      width: 48px; height: 48px; display: grid; place-items: center;
+      color: white; background: linear-gradient(145deg, #ff9b28, var(--orange-dark));
+      border-radius: 17px; box-shadow: 0 7px 16px rgba(233,108,8,.25);
+    }
+    .brand-mark svg { width: 27px; height: 27px; }
+    .brand-name { font-size: 1.55rem; font-weight: 950; letter-spacing: -1.4px; line-height: 1; }
+    .brand-tag { margin-top: 4px; color: var(--brown-soft); font-size: .72rem; font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .location-chip, .icon-button {
+      border: 1px solid rgba(128,84,62,.12); background: rgba(255,255,255,.76);
+      color: var(--brown); box-shadow: var(--shadow-small);
+    }
+    .location-chip {
+      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+      border-radius: 999px; font-size: .83rem; font-weight: 750;
+    }
+    .location-chip svg { width: 17px; color: var(--orange-dark); }
+    .icon-button {
+      width: 43px; height: 43px; display: grid; place-items: center;
+      border-radius: 15px; position: relative; transition: transform .2s, background .2s;
+    }
+    .icon-button:hover { transform: translateY(-2px); background: white; }
+    .icon-button svg { width: 20px; height: 20px; }
+    .dot { position: absolute; width: 8px; height: 8px; border: 2px solid white; border-radius: 50%; background: var(--orange); top: 8px; right: 8px; }
+
+    .welcome { margin-bottom: 20px; }
+    .eyebrow { color: var(--orange-dark); font-size: .76rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 7px 0 5px; font-size: clamp(1.7rem, 4vw, 2.35rem); letter-spacing: -1.3px; line-height: 1.13; }
+    .welcome p { margin: 0; color: var(--brown-soft); font-size: .95rem; }
+
+    .search-wrap { display: flex; gap: 10px; margin: 22px 0 24px; }
+    .search-box {
+      flex: 1; display: flex; align-items: center; gap: 11px; min-width: 0;
+      padding: 0 16px; height: 54px; background: white; border: 1px solid rgba(128,84,62,.12);
+      border-radius: 17px; box-shadow: var(--shadow-small);
+    }
+    .search-box svg { flex: 0 0 auto; width: 20px; color: var(--muted); }
+    .search-box input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--brown); background: transparent; }
+    .search-box input::placeholder { color: #b99b87; }
+    .filter-button {
+      width: 54px; height: 54px; border: 0; border-radius: 17px; color: white;
+      background: var(--orange); box-shadow: 0 7px 16px rgba(233,108,8,.22);
+      display: grid; place-items: center; transition: .2s;
+    }
+    .filter-button:hover { background: var(--orange-dark); transform: translateY(-2px); }
+    .filter-button svg { width: 21px; }
+
+    .hero {
+      position: relative; overflow: hidden; display: grid; grid-template-columns: 1.2fr .8fr;
+      min-height: 245px; border-radius: 30px; padding: 30px 34px;
+      color: white; background: linear-gradient(115deg, #fa941d 0%, #f4770d 58%, #e96508 100%);
+      box-shadow: 0 18px 36px rgba(222,104,9,.20); isolation: isolate;
+    }
+    .hero::before, .hero::after {
+      content: ""; position: absolute; z-index: -1; border-radius: 50%; background: rgba(255,255,255,.12);
+    }
+    .hero::before { width: 290px; height: 290px; right: 80px; top: -180px; }
+    .hero::after { width: 220px; height: 220px; right: -70px; bottom: -130px; }
+    .hero-copy { align-self: center; max-width: 520px; }
+    .hero-kicker { display: inline-flex; gap: 7px; align-items: center; padding: 7px 11px; border-radius: 999px; background: rgba(255,255,255,.19); font-size: .72rem; font-weight: 800; }
+    .hero h2 { margin: 14px 0 8px; max-width: 460px; font-size: clamp(1.75rem, 4vw, 2.65rem); letter-spacing: -1.5px; line-height: 1.04; }
+    .hero p { max-width: 390px; margin: 0 0 19px; color: rgba(255,255,255,.91); line-height: 1.55; font-size: .91rem; }
+    .hero-cta {
+      display: inline-flex; align-items: center; gap: 9px; border: 0; border-radius: 999px;
+      padding: 12px 17px; color: var(--brown); background: white; font-weight: 850;
+      box-shadow: 0 7px 18px rgba(95,40,4,.15); transition: transform .2s;
+    }
+    .hero-cta:hover { transform: translateY(-3px); }
+    .hero-cta svg { width: 17px; }
+    .hero-art { display: grid; place-items: center; align-self: stretch; }
+    .food-orbit {
+      width: 190px; height: 190px; display: grid; place-items: center; position: relative;
+      border: 1px solid rgba(255,255,255,.35); border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.22), rgba(255,255,255,.04) 68%);
+    }
+    .food-emoji { font-size: 6rem; filter: drop-shadow(0 12px 9px rgba(90,39,5,.22)); transform: rotate(-8deg); }
+    .orbit-badge { position: absolute; display: grid; place-items: center; width: 49px; height: 49px; border-radius: 17px; background: white; color: var(--orange-dark); box-shadow: var(--shadow); font-size: 1.55rem; }
+    .orbit-badge.one { top: 8px; right: 1px; transform: rotate(10deg); }
+    .orbit-badge.two { bottom: 6px; left: 0; transform: rotate(-12deg); }
+
+    .section { margin-top: 31px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .section-heading h2 { margin: 0; font-size: 1.22rem; letter-spacing: -.5px; }
+    .section-heading p { margin: 4px 0 0; color: var(--muted); font-size: .82rem; }
+    .text-link { padding: 5px 0; border: 0; background: transparent; color: var(--orange-dark); font-weight: 850; font-size: .82rem; }
+
+    .service-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .service-card {
+      display: flex; align-items: center; gap: 15px; min-height: 112px; padding: 18px;
+      text-align: left; border: 1px solid rgba(128,84,62,.10); border-radius: 21px;
+      background: white; color: var(--brown); box-shadow: var(--shadow-small);
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .service-card:hover { transform: translateY(-4px); border-color: rgba(249,132,19,.35); box-shadow: var(--shadow); }
+    .service-icon { flex: 0 0 58px; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 19px; color: white; background: linear-gradient(145deg, #ffa02d, var(--orange-dark)); }
+    .service-icon svg { width: 27px; height: 27px; }
+    .service-card h3 { margin: 0 0 5px; font-size: 1rem; }
+    .service-card p { margin: 0; color: var(--muted); font-size: .79rem; line-height: 1.4; }
+    .service-arrow { margin-left: auto; color: var(--orange); font-size: 1.35rem; }
+
+    .category-row { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 11px; }
+    .category {
+      min-width: 0; padding: 13px 7px 11px; border: 1px solid rgba(128,84,62,.08);
+      border-radius: 18px; background: rgba(255,255,255,.8); color: var(--brown);
+      text-align: center; transition: .2s;
+    }
+    .category:hover, .category.active { background: var(--orange-soft); border-color: rgba(249,132,19,.35); transform: translateY(-2px); }
+    .category-icon { display: block; margin-bottom: 7px; font-size: 1.65rem; }
+    .category span:last-child { display: block; font-size: .72rem; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .food-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 15px; }
+    .food-card { overflow: hidden; border: 1px solid rgba(128,84,62,.09); border-radius: 21px; background: white; box-shadow: var(--shadow-small); transition: transform .2s; }
+    .food-card:hover { transform: translateY(-4px); }
+    .food-visual { min-height: 135px; display: grid; place-items: center; position: relative; background: linear-gradient(135deg, #ffe7c4, #fff4e4); font-size: 4rem; }
+    .food-tag { position: absolute; top: 10px; left: 10px; padding: 5px 8px; border-radius: 999px; color: #8b3b09; background: rgba(255,255,255,.86); font-size: .65rem; font-weight: 850; }
+    .food-info { padding: 13px 14px 14px; }
+    .food-info h3 { margin: 0 0 5px; font-size: .94rem; }
+    .food-info p { margin: 0; color: var(--muted); font-size: .75rem; }
+    .food-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+    .price { font-size: .87rem; font-weight: 900; color: var(--orange-dark); }
+    .add-button { width: 32px; height: 32px; border: 0; border-radius: 11px; color: white; background: var(--orange); font-size: 1.25rem; line-height: 1; transition: .2s; }
+    .add-button:hover { background: var(--orange-dark); transform: scale(1.07); }
+
+    .trust-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 30px; }
+    .trust-item { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 17px; background: rgba(255,231,196,.55); }
+    .trust-item b { display: block; font-size: .78rem; }
+    .trust-item small { display: block; margin-top: 3px; color: var(--brown-soft); font-size: .68rem; line-height: 1.3; }
+    .trust-icon { font-size: 1.35rem; }
+
+    .bottom-nav {
+      position: fixed; z-index: 20; left: 50%; bottom: 17px; transform: translateX(-50%);
+      width: min(calc(100% - 28px), 560px); display: grid; grid-template-columns: repeat(5,1fr);
+      padding: 9px 10px calc(9px + env(safe-area-inset-bottom)); border: 1px solid rgba(128,84,62,.10);
+      border-radius: 23px; background: rgba(255,255,255,.94); backdrop-filter: blur(16px);
+      box-shadow: 0 12px 36px rgba(68,35,15,.17);
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; padding: 5px 2px; border: 0; border-radius: 15px; color: #a58a78; background: transparent; transition: .2s; }
+    .nav-item svg { width: 21px; height: 21px; stroke-width: 2; }
+    .nav-item span { font-size: .65rem; font-weight: 750; }
+    .nav-item.active { color: var(--orange-dark); background: var(--orange-soft); }
+    .nav-item:active { transform: scale(.93); }
+
+
+    /* Nitipuuy v1.4 — alur keranjang, pilihan menu, alamat, dan checkout */
+    .cart-fab{position:fixed;z-index:35;right:22px;bottom:105px;display:flex;align-items:center;gap:10px;padding:13px 18px;border:0;border-radius:18px;color:#fff;background:var(--brown);box-shadow:0 12px 28px #3b1b1040;font-weight:850;transition:.2s}
+    .cart-fab:hover{transform:translateY(-3px)}.cart-count{display:grid;place-items:center;min-width:23px;height:23px;padding:0 6px;border-radius:99px;background:var(--orange);font-size:.72rem}
+    .checkout-backdrop{position:fixed;z-index:70;inset:0;display:none;align-items:flex-end;justify-content:center;padding:14px;background:#24120880;backdrop-filter:blur(5px)}.checkout-backdrop.show{display:flex}
+    .checkout-panel{width:min(100%,650px);max-height:min(92vh,850px);overflow:auto;padding:22px;border-radius:26px;background:var(--cream);box-shadow:0 25px 70px #24120855;animation:pop .2s ease-out}
+    .checkout-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.checkout-head h2{margin:0;font-size:1.25rem}.checkout-close{width:38px;height:38px;border:0;border-radius:13px;background:#fff;color:var(--brown);font-size:1.3rem}
+    .checkout-progress{display:flex;gap:6px;margin-bottom:19px}.checkout-progress span{height:5px;flex:1;border-radius:9px;background:#ead8c7}.checkout-progress span.done{background:var(--orange)}
+    .checkout-section{padding:15px;margin-bottom:12px;border:1px solid #80543e1c;border-radius:18px;background:#fff}.checkout-section h3{margin:0 0 12px;font-size:.95rem}.checkout-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #f2e8df}.checkout-row:last-child{border:0}.checkout-muted{color:var(--muted);font-size:.78rem}.checkout-qty{display:flex;align-items:center;gap:10px}.checkout-qty button{width:29px;height:29px;border:0;border-radius:9px;background:var(--orange-soft);color:var(--orange-dark);font-weight:900}.checkout-input{width:100%;padding:12px;border:1px solid #ead8c7;border-radius:12px;background:#fff;color:var(--brown);outline-color:var(--orange)}.checkout-field{display:grid;gap:6px;margin:10px 0;font-size:.78rem;font-weight:800}.checkout-actions{display:flex;gap:9px;margin-top:16px}.checkout-actions button{flex:1;padding:13px;border:0;border-radius:13px;font-weight:850}.checkout-back{background:#fff;color:var(--brown)}.checkout-next{background:var(--orange);color:#fff}.address-choice{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #ead8c7;border-radius:13px;margin:8px 0}.address-choice input{accent-color:var(--orange);margin-top:4px}.checkout-note{width:100%;min-height:72px;resize:vertical;padding:12px;border:1px solid #ead8c7;border-radius:12px;font:inherit}.checkout-empty{text-align:center;padding:22px;color:var(--muted)}
+    @media(max-width:520px){.cart-fab{right:14px;bottom:100px}.checkout-backdrop{padding:0}.checkout-panel{max-height:94vh;border-radius:24px 24px 0 0;padding:19px}}
+
+    .toast {
+      position: fixed; z-index: 40; left: 50%; bottom: 100px; transform: translate(-50%, 15px);
+      max-width: calc(100% - 32px); padding: 12px 17px; border-radius: 14px;
+      color: white; background: var(--brown); box-shadow: var(--shadow); font-size: .84rem;
+      opacity: 0; pointer-events: none; transition: .25s; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .modal-backdrop { position: fixed; z-index: 50; inset: 0; display: none; place-items: center; padding: 20px; background: rgba(49,24,12,.42); backdrop-filter: blur(5px); }
+    .modal-backdrop.show { display: grid; }
+    .modal { width: min(100%, 420px); padding: 24px; border-radius: 24px; background: var(--cream); box-shadow: 0 25px 70px rgba(40,20,10,.25); animation: pop .22s ease-out; }
+    .modal h2 { margin: 0 0 7px; }
+    .modal p { margin: 0 0 18px; color: var(--brown-soft); line-height: 1.5; font-size: .9rem; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 9px; }
+    .secondary-button, .primary-button { padding: 11px 15px; border: 0; border-radius: 13px; font-weight: 800; }
+    .secondary-button { color: var(--brown); background: white; }
+    .primary-button { color: white; background: var(--orange); }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+
+
+
+    .search-page { display:none; }
+    .search-page.active { display:block; animation:pop .25s ease-out; }
+    .search-hero { padding:22px; border-radius:25px; color:#fff; background:linear-gradient(130deg,#fa941d,#e96c08); box-shadow:0 12px 28px rgba(222,104,9,.17); }
+    .search-hero h1 { margin:5px 0 7px; font-size:1.65rem; }
+    .search-hero p { margin:0; color:#fff4e6; font-size:.85rem; }
+    .search-mainbox { display:flex; align-items:center; gap:10px; margin-top:18px; padding:0 14px; height:54px; border:1px solid rgba(255,255,255,.6); border-radius:16px; background:#fff; box-shadow:0 8px 18px rgba(111,48,5,.12); }
+    .search-mainbox svg { width:21px; flex:0 0 auto; color:#e96c08; }
+    .search-mainbox input { width:100%; min-width:0; border:0; outline:0; color:#452315; background:transparent; font:inherit; }
+    .search-mainbox input::placeholder { color:#b99b87; }
+    .search-clear { border:0; color:#9b6544; background:transparent; font-size:1.15rem; }
+    .search-section { margin-top:25px; }
+    .search-section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
+    .search-section-head h2 { margin:0; font-size:1.05rem; }
+    .search-section-head small { color:var(--muted); font-size:.75rem; }
+    .search-chips { display:flex; gap:9px; overflow-x:auto; padding:2px 1px 8px; scrollbar-width:none; }
+    .search-chips::-webkit-scrollbar { display:none; }
+    .search-chip { flex:0 0 auto; padding:9px 14px; border:1px solid rgba(128,84,62,.12); border-radius:999px; color:var(--brown-soft); background:#fff; font-size:.77rem; font-weight:800; transition:.2s; }
+    .search-chip.active,.search-chip:hover { border-color:var(--orange); color:#fff; background:var(--orange); }
+    .search-results-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+    .search-result-card { overflow:hidden; border:1px solid rgba(128,84,62,.09); border-radius:19px; background:#fff; box-shadow:var(--shadow-small); }
+    .search-result-visual { position:relative; min-height:116px; display:grid; place-items:center; background:linear-gradient(135deg,#ffe7c4,#fff4e4); font-size:3.4rem; }
+    .search-result-badge { position:absolute; top:9px; left:9px; padding:5px 8px; border-radius:99px; color:#8b3b09; background:#fff; font-size:.63rem; font-weight:850; }
+    .search-result-body { padding:12px; }
+    .search-result-body h3 { margin:0 0 5px; font-size:.9rem; }
+    .search-result-body p { margin:0; color:var(--muted); font-size:.72rem; }
+    .search-result-foot { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:12px; }
+    .search-result-price { color:var(--orange-dark); font-size:.82rem; font-weight:900; }
+    .search-add { width:32px; height:32px; border:0; border-radius:11px; color:#fff; background:var(--orange); font-size:1.2rem; }
+    .search-empty { grid-column:1/-1; padding:28px 18px; border:1px dashed #e9c7a8; border-radius:18px; color:var(--muted); background:#fffaf3; text-align:center; }
+    .search-empty strong { display:block; margin:8px 0 4px; color:var(--brown); }
+    .search-tip { margin-top:16px; padding:14px 15px; border-radius:16px; color:#80502e; background:#ffebcf; font-size:.76rem; line-height:1.5; }
+    @media(max-width:430px){.search-hero{padding:19px}.search-result-visual{min-height:100px}}
+
+
+    .orders-page,.activity-page{display:none;animation:pop .25s ease-out}
+    .orders-page.active,.activity-page.active{display:block}
+    .page-banner{padding:25px 27px;border-radius:25px;background:linear-gradient(115deg,#fa941d,#e96508);color:#fff;box-shadow:0 14px 30px rgba(222,104,9,.16);margin-bottom:22px}
+    .page-banner .eyebrow{color:#fff0dc}.page-banner h1{margin:8px 0 6px}.page-banner p{margin:0;color:#fff3e6;font-size:.9rem}
+    .order-tabs{display:flex;gap:8px;overflow-x:auto;padding:3px 1px 12px;margin-bottom:12px;scrollbar-width:none}
+    .order-tab{flex:0 0 auto;border:1px solid rgba(128,84,62,.13);border-radius:999px;padding:10px 15px;background:#fff;color:var(--brown-soft);font-size:.82rem;font-weight:800}
+    .order-tab.active{background:var(--brown);border-color:var(--brown);color:#fff}
+    .order-list{display:grid;gap:13px}
+    .order-card{padding:17px;border:1px solid rgba(128,84,62,.10);border-radius:20px;background:#fff;box-shadow:var(--shadow-small)}
+    .order-top,.order-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .order-code{font-size:.72rem;color:var(--muted);font-weight:750}.order-date{font-size:.72rem;color:var(--muted)}
+    .order-status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff1d9;color:#a65a08;font-size:.7rem;font-weight:850;white-space:nowrap}
+    .order-status.done{background:#e8f8ee;color:#168449}.order-status.cancel{background:#fff0ee;color:#c34b3e}
+    .order-main{display:flex;gap:12px;align-items:center;padding:16px 0}
+    .order-emoji{width:52px;height:52px;display:grid;place-items:center;border-radius:16px;background:var(--cream);font-size:1.7rem;flex:0 0 auto}
+    .order-main h3{font-size:.95rem;margin:0 0 4px}.order-main p{font-size:.76rem;color:var(--muted);margin:0}
+    .order-bottom{border-top:1px solid #f2e9df;padding-top:13px}.order-total small{display:block;color:var(--muted);font-size:.68rem}.order-total strong{font-size:.95rem}
+    .detail-button{border:0;border-radius:12px;padding:9px 13px;background:var(--orange-soft);color:var(--orange-dark);font-weight:850;font-size:.76rem}
+    .orders-empty{padding:36px 20px;text-align:center;background:#fff;border:1px dashed #e8d5c4;border-radius:20px;color:var(--brown-soft)}
+    .orders-empty .empty-emoji{font-size:2.5rem;margin-bottom:10px}.orders-empty strong{display:block;color:var(--brown);margin-bottom:5px}.orders-empty p{font-size:.82rem;margin:0}
+    .activity-list{position:relative;display:grid;gap:0;padding-left:12px}.activity-item{position:relative;display:grid;grid-template-columns:35px 1fr;gap:12px;padding:0 0 22px}
+    .activity-item:not(:last-child):before{content:"";position:absolute;left:16px;top:34px;bottom:0;width:2px;background:#f0d9c2}
+    .activity-icon{z-index:1;width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:#fff0dc;font-size:1rem}
+    .activity-copy{padding:13px 15px;background:#fff;border:1px solid rgba(128,84,62,.09);border-radius:16px;box-shadow:var(--shadow-small)}
+    .activity-copy strong{font-size:.86rem}.activity-copy p{margin:5px 0;color:var(--brown-soft);font-size:.78rem;line-height:1.5}.activity-copy small{font-size:.68rem;color:var(--muted)}
+    @media(max-width:520px){.page-banner{padding:21px}.order-card{padding:14px}.order-main{padding:13px 0}}
+
+
+    .mitra-page{display:none}.mitra-page.active{display:block;animation:pop .25s ease-out}.mitra-hero{padding:22px;border-radius:22px;background:linear-gradient(135deg,#f98413,#e96c08);color:#fff;margin-bottom:16px}.mitra-hero h1{margin:5px 0;font-size:1.5rem}.mitra-hero p{margin:0;color:#fff2df;font-size:.85rem}.mitra-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}.mitra-stat{background:#fff;padding:13px 8px;border-radius:15px;text-align:center;box-shadow:var(--shadow-small)}.mitra-stat b{display:block;color:var(--orange-dark);font-size:1.2rem}.mitra-stat small{font-size:.68rem;color:var(--muted);font-weight:700}.mitra-toggle{width:100%;padding:13px;border:0;border-radius:13px;background:#fff;color:var(--orange-dark);font-weight:900;margin-top:13px}.mitra-order-card{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:17px;padding:15px;margin:10px 0;box-shadow:var(--shadow-small)}.mitra-order-head{display:flex;justify-content:space-between;gap:8px;font-size:.75rem;color:var(--muted)}.mitra-order-card h3{margin:10px 0 5px;font-size:1rem}.mitra-order-card p{margin:4px 0;color:var(--brown-soft);font-size:.8rem;line-height:1.5}.mitra-order-actions{display:flex;gap:8px;margin-top:12px}.mitra-order-actions button{flex:1;border:0;border-radius:11px;padding:11px 8px;font-weight:850;background:var(--orange);color:#fff}.mitra-order-actions .reject{background:#fff0ed;color:#bd4438}.mitra-empty{padding:24px;text-align:center;background:#fff;border-radius:16px;color:var(--muted)}
+
+    .profile-page { display: none; }
+    .profile-page.active { display: block; animation: pop .25s ease-out; }
+    .home-content.hidden { display: none; }
+    .profile-cover {
+      position: relative; overflow: hidden; padding: 26px; border-radius: 26px;
+      color: white; background: linear-gradient(125deg, #fa941d, #e96c08);
+      box-shadow: 0 14px 30px rgba(222,104,9,.18);
+    }
+    .profile-cover::after {
+      content: ""; position: absolute; width: 190px; height: 190px; right: -55px; top: -85px;
+      border: 1px solid rgba(255,255,255,.25); border-radius: 50%;
+      box-shadow: 0 0 0 22px rgba(255,255,255,.07), 0 0 0 45px rgba(255,255,255,.05);
+    }
+    .profile-cover h1 { margin: 0 0 7px; font-size: 1.65rem; }
+    .profile-cover p { margin: 0; color: rgba(255,255,255,.9); font-size: .88rem; }
+    .profile-card {
+      position: relative; z-index: 1; display: flex; align-items: center; gap: 15px;
+      margin-top: 20px; padding: 17px; border: 1px solid rgba(255,255,255,.4);
+      border-radius: 21px; background: rgba(255,255,255,.18); backdrop-filter: blur(10px);
+    }
+    .avatar {
+      flex: 0 0 66px; width: 66px; height: 66px; display: grid; place-items: center;
+      border: 3px solid rgba(255,255,255,.8); border-radius: 22px;
+      color: var(--orange-dark); background: #fff5e8; font-size: 1.8rem; font-weight: 900;
+    }
+    .profile-name { margin: 0 0 4px; font-size: 1.12rem; font-weight: 900; }
+    .profile-contact { margin: 0; color: rgba(255,255,255,.9); font-size: .79rem; }
+    .edit-profile {
+      margin-left: auto; flex: 0 0 auto; padding: 9px 12px; border: 1px solid rgba(255,255,255,.5);
+      border-radius: 12px; color: white; background: rgba(255,255,255,.16); font-size: .75rem; font-weight: 800;
+    }
+    .profile-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 15px; }
+    .profile-stat { padding: 15px 10px; border: 1px solid rgba(128,84,62,.09); border-radius: 17px; background: white; text-align: center; box-shadow: var(--shadow-small); }
+    .profile-stat strong { display: block; color: var(--orange-dark); font-size: 1.15rem; }
+    .profile-stat span { color: var(--muted); font-size: .7rem; font-weight: 700; }
+    .profile-menu { display: grid; gap: 10px; }
+    .profile-menu-item {
+      width: 100%; display: flex; align-items: center; gap: 13px; padding: 15px;
+      border: 1px solid rgba(128,84,62,.09); border-radius: 17px; color: var(--brown);
+      background: white; text-align: left; box-shadow: var(--shadow-small); transition: .2s;
+    }
+    .profile-menu-item:hover { transform: translateY(-2px); border-color: rgba(249,132,19,.35); }
+    .profile-menu-icon {
+      flex: 0 0 42px; width: 42px; height: 42px; display: grid; place-items: center;
+      border-radius: 14px; color: var(--orange-dark); background: var(--orange-soft); font-size: 1.15rem;
+    }
+    .profile-menu-copy { flex: 1; min-width: 0; }
+    .profile-menu-copy strong { display: block; font-size: .88rem; }
+    .profile-menu-copy small { display: block; margin-top: 3px; color: var(--muted); font-size: .72rem; }
+    .profile-chevron { color: #c49b7e; font-size: 1.35rem; }
+    .profile-note { margin-top: 18px; padding: 14px 16px; border-radius: 16px; color: var(--brown-soft); background: #ffebcf; font-size: .78rem; line-height: 1.5; }
+    .profile-form { display: grid; gap: 12px; margin-top: 14px; }
+    .profile-form label { display: grid; gap: 6px; color: var(--brown-soft); font-size: .78rem; font-weight: 800; }
+    .profile-form input { width: 100%; padding: 12px 13px; border: 1px solid rgba(128,84,62,.16); border-radius: 12px; outline: none; color: var(--brown); background: white; }
+    .profile-form input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,132,19,.12); }
+    .profile-form textarea,.profile-form select { width:100%; padding:12px 13px; border:1px solid rgba(128,84,62,.16); border-radius:12px; outline:none; color:var(--brown); background:#fff; font:inherit; }
+    .profile-form textarea { min-height:84px; resize:vertical; }
+    .profile-form select:focus,.profile-form textarea:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(249,132,19,.12); }
+    .profile-address-list { display:grid; gap:10px; margin:12px 0; }
+    .profile-address-card { padding:13px; border:1px solid rgba(128,84,62,.13); border-radius:14px; background:#fff; }
+    .profile-address-card p { margin:6px 0; color:var(--brown-soft); font-size:.8rem; line-height:1.5; }
+    .profile-inline-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .profile-inline-actions button { border:0; border-radius:10px; padding:8px 11px; font-size:.75rem; font-weight:800; background:var(--orange-soft); color:var(--orange-dark); }
+    .profile-inline-actions .danger { background:#fff0ed; color:#c33b2e; }
+    .profile-choice { display:flex!important; align-items:center; gap:10px!important; padding:12px; border:1px solid rgba(128,84,62,.14); border-radius:12px; background:#fff; }
+    .profile-choice input { width:auto!important; accent-color:var(--orange); }
+    .profile-hint { padding:12px; border-radius:12px; background:var(--orange-soft); color:var(--brown-soft); font-size:.78rem; line-height:1.5; }
+
+    @media (max-width: 430px) {
+      .profile-cover { padding: 20px; }
+      .profile-card { gap: 11px; padding: 13px; }
+      .avatar { width: 56px; height: 56px; flex-basis: 56px; border-radius: 18px; }
+      .edit-profile { padding: 8px; font-size: .68rem; }
+      .profile-stat { padding: 12px 5px; }
+    }
+
+    @media (max-width: 700px) {
+      .app-shell { padding: 17px 16px 115px; }
+      .topbar { margin-bottom: 25px; }
+      .location-chip { padding: 9px 11px; font-size: .75rem; }
+      .hero { min-height: 220px; padding: 24px 22px; grid-template-columns: 1fr .55fr; }
+      .food-orbit { width: 135px; height: 135px; }
+      .food-emoji { font-size: 4.5rem; }
+      .orbit-badge { width: 38px; height: 38px; border-radius: 13px; font-size: 1.2rem; }
+      .service-grid { gap: 10px; }
+      .service-card { padding: 14px; gap: 11px; }
+      .service-icon { width: 48px; height: 48px; flex-basis: 48px; border-radius: 16px; }
+      .service-card h3 { font-size: .9rem; }
+      .service-card p { font-size: .72rem; }
+      .food-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .food-visual { min-height: 120px; }
+      .trust-strip { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 430px) {
+      .brand-name { font-size: 1.35rem; }
+      .brand-tag { font-size: .64rem; }
+      .brand-mark { width: 43px; height: 43px; }
+      .location-chip span { max-width: 95px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .hero { grid-template-columns: 1fr; min-height: 0; padding: 23px 21px; }
+      .hero-copy { position: relative; z-index: 2; }
+      .hero-art { position: absolute; right: -27px; bottom: -26px; opacity: .24; }
+      .hero h2 { max-width: 280px; }
+      .hero p { max-width: 270px; }
+      .category-row { gap: 7px; }
+      .category { padding: 10px 3px; border-radius: 14px; }
+      .category-icon { font-size: 1.4rem; }
+      .category span:last-child { font-size: .63rem; }
+      .service-card { min-height: 104px; flex-wrap: wrap; align-content: center; }
+      .service-arrow { display: none; }
+      .food-info { padding: 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <div class="home-content" id="homeContent">
+    <header class="topbar">
+      <div class="brand" aria-label="Nitipuuy">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 10h16l-1.5 10h-13L4 10Z"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M3 20h18"/>
+          </svg>
+        </div>
+        <div><div class="brand-name">nitipuuy<span style="color:var(--orange)">.</span></div><div class="brand-tag">Kamu pilih, kami yang gerak!</div></div>
+      </div>
+      <div class="top-actions">
+        <button class="location-chip" data-action="location" aria-label="Ubah lokasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span>Purwakarta</span>
+        </button>
+        <button class="icon-button" data-action="notifications" aria-label="Notifikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><i class="dot"></i>
+        </button>
+      </div>
+    </header>
+
+    <section class="welcome">
+      <div class="eyebrow">Selamat datang di Nitipuuy</div>
+      <h1>Laper? Titipuy aja, <span style="color:var(--orange-dark)">Ref!</span> 👋</h1>
+      <p>Makanan favoritmu, sekarang lebih dekat dan praktis.</p>
+    </section>
+
+    <div class="search-wrap">
+      <label class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="searchInput" type="search" placeholder="Cari makanan, resto, atau jajanan..." aria-label="Cari makanan atau restoran" />
+      </label>
+      <button class="filter-button" data-action="filter" aria-label="Filter pencarian">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M7 12h10m-7 5h4"/><circle cx="8" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+
+    <section class="hero" aria-label="Promosi Nitipuuy">
+      <div class="hero-copy">
+        <div class="hero-kicker">🧡 JASTIP MAKANAN PURWAKARTA</div>
+        <h2>Ngidam apa hari ini?</h2>
+        <p>Dari restoran favorit, cafe, street food, sampai jajanan viral. Kamu pilih, mitra Nitipuuy yang bantu!</p>
+        <button class="hero-cta" data-action="order">Mulai titip sekarang <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="food-orbit"><span class="food-emoji">🍔</span><span class="orbit-badge one">🍟</span><span class="orbit-badge two">🧋</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><div><h2>Mau titip apa?</h2><p>Pilih layanan yang kamu butuhkan</p></div></div>
+      <div class="service-grid">
+        <button class="service-card" data-action="local">
+          <span class="service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-2 10H5L3 10Z"/><path d="M7 10a5 5 0 0 1 10 0"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg></span>
+          <span><h3>Cari Mitra</h3><p>Titip beli dan antar di sekitar kamu.</p></span><span class="service-arrow">›</span>
+        </button>
+        <button class="service-card" data-action="trip">
+          <span class="service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h18l-2-6H5l-2 6Z"/><path d="M7 11 9 6h6l3 5"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>
+          <span><h3>Jastip Perjalanan</h3><p>Titip barang antarkota di Pulau Jawa.</p></span><span class="service-arrow">›</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><div><h2>Jelajahi kategori</h2><p>Temukan yang lagi kamu inginkan</p></div><button class="text-link" data-action="all-categories">Lihat semua</button></div>
+      <div class="category-row" id="categories">
+        <button class="category active" data-category="Semua"><span class="category-icon">✨</span><span>Semua</span></button>
+        <button class="category" data-category="Makanan"><span class="category-icon">🍔</span><span>Makanan</span></button>
+        <button class="category" data-category="Minuman"><span class="category-icon">🧋</span><span>Minuman</span></button>
+        <button class="category" data-category="Camilan"><span class="category-icon">🍟</span><span>Camilan</span></button>
+        <button class="category" data-category="Dessert"><span class="category-icon">🍰</span><span>Dessert</span></button>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><div><h2>Favorit sekitar kamu</h2><p>Contoh rekomendasi untuk prototipe</p></div><button class="text-link" data-action="popular">Lihat semua</button></div>
+      <div class="food-grid" id="foodGrid">
+        <article class="food-card" data-name="Burger klasik" data-category="Makanan">
+          <div class="food-visual"><span class="food-tag">⭐ Favorit</span>🍔</div>
+          <div class="food-info"><h3>Burger Klasik</h3><p>Contoh menu · Makanan</p><div class="food-bottom"><span class="price">Mulai Rp25.000</span><button class="add-button" aria-label="Titip Burger Klasik" data-add="Burger Klasik">+</button></div></div>
+        </article>
+        <article class="food-card" data-name="Es kopi susu" data-category="Minuman">
+          <div class="food-visual"><span class="food-tag">☕ Lagi dicari</span>🧋</div>
+          <div class="food-info"><h3>Es Kopi Susu</h3><p>Contoh menu · Minuman</p><div class="food-bottom"><span class="price">Mulai Rp18.000</span><button class="add-button" aria-label="Titip Es Kopi Susu" data-add="Es Kopi Susu">+</button></div></div>
+        </article>
+        <article class="food-card" data-name="Ayam crispy" data-category="Makanan">
+          <div class="food-visual">🍗</div>
+          <div class="food-info"><h3>Ayam Crispy</h3><p>Contoh menu · Makanan</p><div class="food-bottom"><span class="price">Mulai Rp20.000</span><button class="add-button" aria-label="Titip Ayam Crispy" data-add="Ayam Crispy">+</button></div></div>
+        </article>
+        <article class="food-card" data-name="Kentang goreng" data-category="Camilan">
+          <div class="food-visual">🍟</div>
+          <div class="food-info"><h3>Kentang Goreng</h3><p>Contoh menu · Camilan</p><div class="food-bottom"><span class="price">Mulai Rp15.000</span><button class="add-button" aria-label="Titip Kentang Goreng" data-add="Kentang Goreng">+</button></div></div>
+        </article>
+        <article class="food-card" data-name="Dessert strawberry" data-category="Dessert">
+          <div class="food-visual">🍓</div>
+          <div class="food-info"><h3>Dessert Strawberry</h3><p>Contoh menu · Dessert</p><div class="food-bottom"><span class="price">Mulai Rp22.000</span><button class="add-button" aria-label="Titip Dessert Strawberry" data-add="Dessert Strawberry">+</button></div></div>
+        </article>
+        <article class="food-card" data-name="Mie pedas" data-category="Makanan">
+          <div class="food-visual">🍜</div>
+          <div class="food-info"><h3>Mie Pedas</h3><p>Contoh menu · Makanan</p><div class="food-bottom"><span class="price">Mulai Rp17.000</span><button class="add-button" aria-label="Titip Mie Pedas" data-add="Mie Pedas">+</button></div></div>
+        </article>
+      </div>
+      <p id="emptyState" style="display:none;text-align:center;color:var(--muted);padding:25px 0">Belum ada menu yang cocok. Coba kata kunci lain.</p>
+    </section>
+
+    <section class="trust-strip" aria-label="Keunggulan Nitipuuy">
+      <div class="trust-item"><span class="trust-icon">🛡️</span><span><b>Pesanan terpantau</b><small>Status pesanan jelas di prototipe.</small></span></div>
+      <div class="trust-item"><span class="trust-icon">🤝</span><span><b>Mitra ramah</b><small>Pengalaman titip yang praktis.</small></span></div>
+      <div class="trust-item"><span class="trust-icon">🧡</span><span><b>Lebih dekat</b><small>Mulai dari area Purwakarta.</small></span></div>
+    </section>
+    </div>
+
+
+
+    <section class="search-page" id="searchPage">
+      <div class="search-hero">
+        <div class="eyebrow" style="color:#fff4e6">TEMUKAN FAVORITMU</div>
+        <h1>Mau titip apa hari ini? 🧡</h1>
+        <p>Cari makanan, minuman, jajanan, atau tempat favorit di Purwakarta.</p>
+        <div class="search-mainbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="nitipuuySearchInput" type="search" placeholder="Cari seblak, kopi, ayam geprek..." autocomplete="off">
+          <button class="search-clear" id="clearSearch" aria-label="Hapus pencarian" type="button">×</button>
+        </div>
+      </div>
+
+      <div class="search-section">
+        <div class="search-section-head"><h2>Kategori</h2><small>Pilih yang kamu inginkan</small></div>
+        <div class="search-chips" id="searchCategoryChips">
+          <button class="search-chip active" data-category="Semua">✨ Semua</button>
+          <button class="search-chip" data-category="Makanan">🍔 Makanan</button>
+          <button class="search-chip" data-category="Minuman">🥤 Minuman</button>
+          <button class="search-chip" data-category="Jajanan">🍢 Jajanan</button>
+          <button class="search-chip" data-category="Dessert">🍰 Dessert</button>
+        </div>
+      </div>
+
+      <div class="search-section">
+        <div class="search-section-head"><h2 id="searchResultHeading">Rekomendasi buat kamu</h2><small id="searchResultCount">6 pilihan</small></div>
+        <div class="search-results-grid" id="searchResults"></div>
+      </div>
+      <div class="search-tip">🛵 <strong>Belum menemukan yang dicari?</strong><br>Di Nitipuuy, kamu bisa mengajukan titipan dari tempat favoritmu. Fitur permintaan khusus akan kita kembangkan berikutnya.</div>
+    </section>
+
+
+    <section class="orders-page" id="ordersPage">
+      <div class="page-banner"><div class="eyebrow">PESANAN SAYA</div><h1>Pesanan kamu 🛍️</h1><p>Pantau titipan yang sedang berjalan sampai selesai.</p></div>
+      <div class="order-tabs" id="orderTabs" aria-label="Filter pesanan">
+        <button type="button" class="order-tab active" data-order-filter="Semua">Semua</button>
+        <button type="button" class="order-tab" data-order-filter="Diproses">Diproses</button>
+        <button type="button" class="order-tab" data-order-filter="Dalam perjalanan">Dalam perjalanan</button>
+        <button type="button" class="order-tab" data-order-filter="Selesai">Selesai</button>
+      </div>
+      <div class="order-list" id="orderList"></div>
+    </section>
+
+    <section class="activity-page" id="activityPage">
+      <div class="page-banner"><div class="eyebrow">RIWAYAT AKTIVITAS</div><h1>Jejak aktivitas 📋</h1><p>Lihat catatan perjalanan pesanan dan aktivitas akunmu.</p></div>
+      <div class="activity-list" id="activityList"></div>
+    </section>
+
+    <section class="mitra-page" id="mitraPage">
+      <div class="mitra-hero"><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p><button class="mitra-toggle" id="switchBuyer">← Kembali ke Mode Pembeli</button></div>
+      <div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
+      <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersimpan pada perangkat ini</p></div></div><div id="mitraOrderList"></div>
+    </section>
+
+    <section class="profile-page" id="profilePage">
+      <div class="profile-cover">
+        <div class="eyebrow" style="color:#fff4e6">AKUN NITIPUUY</div>
+        <h1>Profil Saya</h1>
+        <p>Kelola informasi dan aktivitas akunmu.</p>
+        <div class="profile-card">
+          <div class="avatar" id="profileAvatar">R</div>
+          <div>
+            <p class="profile-name" id="profileDisplayName">Ref Pengguna</p>
+            <p class="profile-contact" id="profileDisplayPhone">Belum ada nomor telepon</p>
+          </div>
+          <button class="edit-profile" id="editProfileBtn">Edit profil</button>
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="profile-stat"><strong id="profileTotalOrders">0</strong><span>Total pesanan</span></div>
+        <div class="profile-stat"><strong id="profileActiveOrders">0</strong><span>Dalam proses</span></div>
+        <div class="profile-stat"><strong id="profileCompletedOrders">0</strong><span>Selesai</span></div>
+      </div>
+
+      <section class="section">
+        <div class="section-heading"><div><h2>Akun & preferensi</h2><p>Pengaturan pribadi Nitipuuy</p></div></div>
+        <div class="profile-menu">
+          <button class="profile-menu-item" data-profile-action="personal">
+            <span class="profile-menu-icon">👤</span><span class="profile-menu-copy"><strong>Informasi pribadi</strong><small>Nama, nomor telepon, dan email</small></span><span class="profile-chevron">›</span>
+          </button>
+          <button class="profile-menu-item" data-profile-action="address">
+            <span class="profile-menu-icon">📍</span><span class="profile-menu-copy"><strong>Alamat tersimpan</strong><small>Kelola alamat pengantaran</small></span><span class="profile-chevron">›</span>
+          </button>
+          <button class="profile-menu-item" data-profile-action="role">
+            <span class="profile-menu-icon">🛵</span><span class="profile-menu-copy"><strong>Mode akun</strong><small>Pembeli dan Mitra</small></span><span class="profile-chevron">›</span>
+          </button>
+          <button class="profile-menu-item" data-profile-action="payment">
+            <span class="profile-menu-icon">💵</span><span class="profile-menu-copy"><strong>Metode pembayaran</strong><small>Pembayaran tunai sesuai rancangan awal</small></span><span class="profile-chevron">›</span>
+          </button>
+          <button class="profile-menu-item" data-profile-action="help">
+            <span class="profile-menu-icon">💬</span><span class="profile-menu-copy"><strong>Bantuan & dukungan</strong><small>Informasi dan bantuan penggunaan</small></span><span class="profile-chevron">›</span>
+          </button>
+          <button class="profile-menu-item" data-profile-action="about">
+            <span class="profile-menu-icon">🧡</span><span class="profile-menu-copy"><strong>Tentang Nitipuuy</strong><small>Versi prototipe 1.5</small></span><span class="profile-chevron">›</span>
+          </button>
+        </div>
+        <div class="profile-note">🧡 Ini masih prototipe. Informasi akun pada halaman ini belum terhubung ke server dan hanya disimpan di browser perangkat ini.</div>
+      </section>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navigasi utama">
+    <button type="button" class="nav-item active" data-nav="Beranda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z"/></svg><span>Beranda</span></button>
+    <button type="button" class="nav-item" data-nav="Cari"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><span>Cari</span></button>
+    <button type="button" class="nav-item" data-nav="Pesanan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16l-1.5 12h-13L4 8Z"/><path d="M8 8a4 4 0 0 1 8 0"/></svg><span>Pesanan</span></button>
+    <button type="button" class="nav-item" data-nav="Aktivitas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M8 12h8M8 16h8"/></svg><span>Aktivitas</span></button>
+    <button type="button" class="nav-item" data-nav="Profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profil</span></button>
+  </nav>
+
+
+  <button type="button" class="cart-fab" id="cartFab" aria-label="Buka keranjang">🛒 Keranjang <span class="cart-count" id="cartCount">0</span></button>
+  <div class="checkout-backdrop" id="checkoutBackdrop" aria-hidden="true">
+    <section class="checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+      <div class="checkout-head"><h2 id="checkoutTitle">Keranjang titipan</h2><button type="button" class="checkout-close" id="checkoutClose" aria-label="Tutup">×</button></div>
+      <div class="checkout-progress" id="checkoutProgress"><span class="done"></span><span></span><span></span></div>
+      <div id="checkoutBody"></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Nitipuuy</h2>
+      <p id="modalText">Fitur ini sedang disiapkan dalam prototipe.</p>
+      <div class="modal-actions"><button class="secondary-button" id="closeModal">Tutup</button><button class="primary-button" id="modalOk">Mengerti</button></div>
+    </div>
+  </div>
+
+  <script>
+    const toast = document.getElementById('toast');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalText = document.getElementById('modalText');
+    let toastTimer;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+    function showModal(title, message) {
+      modalTitle.textContent = title;
+      modalText.textContent = message;
+      modal.classList.add('show');
+    }
+    function closeModal() { modal.classList.remove('show'); const content = modal.querySelector('.profile-form, .profile-address-book'); if (content) content.replaceWith(modalText); }
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('modalOk').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    document.querySelectorAll('[data-action]').forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.action;
+        const messages = {
+          location: ['Lokasi layanan', 'Pilih alamat tujuan saat checkout. Alamat tersimpan di perangkat ini.'],
+          notifications: ['Notifikasi', 'Belum ada notifikasi. Pusat notifikasi akan dikembangkan pada tahap berikutnya.'],
+          filter: ['Filter pencarian', 'Filter kategori sudah tersedia di bagian Jelajahi Kategori. Filter jarak dan harga akan ditambahkan nanti.'],
+          order: ['Mulai titip', 'Pilih menu terlebih dahulu, lalu buka keranjang untuk mengisi alamat dan konfirmasi pesanan.'],
+          local: ['Cari Mitra', 'Layanan untuk meminta mitra membelikan atau mengantarkan kebutuhan di sekitar lokasi. Ini masih tampilan prototipe.'],
+          trip: ['Jastip Perjalanan', 'Layanan titip antarkota melalui mitra yang sedang bepergian. Fitur pencocokan perjalanan akan dibuat pada tahap berikutnya.'],
+          'all-categories': ['Kategori', 'Kategori tambahan dapat kita masukkan setelah struktur produk disepakati.'],
+          popular: ['Menu favorit', 'Daftar ini masih berisi contoh menu, bukan katalog restoran atau harga aktual.']
+        };
+        showModal(...(messages[action] || ['Nitipuuy', 'Fitur ini sedang disiapkan.']));
+      });
+    });
+
+    const homeContent = document.getElementById('homeContent');
+    const profilePage = document.getElementById('profilePage');
+    const searchPage = document.getElementById('searchPage');
+    const ordersPage = document.getElementById('ordersPage');
+    const activityPage = document.getElementById('activityPage');
+    function navigateTo(name) {
+      const isMitra = localStorage.getItem(ROLE_KEY) === 'Mitra';
+      if (isMitra && ['Beranda','Cari','Pesanan','Aktivitas'].includes(name)) name = 'Dashboard';
+      if (!isMitra && name === 'Dashboard') name = 'Beranda';
+      document.querySelectorAll('[data-nav]').forEach(item => item.classList.toggle('active', item.dataset.nav === name));
+      homeContent.classList.toggle('hidden', name !== 'Beranda');
+      searchPage.classList.toggle('active', name === 'Cari');
+      profilePage.classList.toggle('active', name === 'Profil');
+      ordersPage.classList.toggle('active', name === 'Pesanan');
+      activityPage.classList.toggle('active', name === 'Aktivitas');
+      document.getElementById('mitraPage').classList.toggle('active', name === 'Dashboard');
+      if (name === 'Cari') renderSearchResults();
+      if (name === 'Pesanan') renderOrders();
+      if (name === 'Aktivitas') renderActivity();
+      if (name === 'Dashboard') renderMitraDashboard();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (name === 'Cari') setTimeout(() => document.getElementById('nitipuuySearchInput').focus(), 220);
+    }
+    document.querySelectorAll('[data-nav]').forEach(button => button.addEventListener('click', () => navigateTo(button.dataset.nav)));
+
+
+    const searchProducts = [
+      {name:'Burger Beef Cheese',place:'Burger Corner • Purwakarta',price:28000,category:'Makanan',emoji:'🍔',badge:'Favorit'},
+      {name:'Ayam Geprek',place:'Dapur Sambal • Purwakarta',price:19000,category:'Makanan',emoji:'🍗',badge:'Best seller'},
+      {name:'Seblak Komplit',place:'Seblak Teh Nia • Purwakarta',price:17000,category:'Jajanan',emoji:'🍲',badge:'Pedas nagih'},
+      {name:'Es Kopi Susu',place:'Kopi Sudut • Purwakarta',price:18000,category:'Minuman',emoji:'🧋',badge:'Lagi ramai'},
+      {name:'Dimsum Mentai',place:'Dimsum Yuk • Purwakarta',price:22000,category:'Jajanan',emoji:'🥟',badge:'Rekomendasi'},
+      {name:'Dessert Strawberry',place:'Sweet Treat • Purwakarta',price:24000,category:'Dessert',emoji:'🍓',badge:'Manis segar'}
+    ];
+    let activeSearchCategory = 'Semua';
+    const nitipuuySearchField = document.getElementById('nitipuuySearchInput');
+    const searchResults = document.getElementById('searchResults');
+    function rupiah(value) { return 'Rp' + Number(value).toLocaleString('id-ID'); }
+    function renderSearchResults() {
+      if (!searchResults) return;
+      const keyword = (nitipuuySearchField.value || '').trim().toLocaleLowerCase('id-ID');
+      const results = searchProducts.filter(item => {
+        const matchesCategory = activeSearchCategory === 'Semua' || item.category === activeSearchCategory;
+        const matchesKeyword = !keyword || `${item.name} ${item.place} ${item.category}`.toLocaleLowerCase('id-ID').includes(keyword);
+        return matchesCategory && matchesKeyword;
+      });
+      document.getElementById('searchResultHeading').textContent = keyword ? `Hasil untuk “${nitipuuySearchField.value.trim()}”` : (activeSearchCategory === 'Semua' ? 'Rekomendasi buat kamu' : activeSearchCategory);
+      document.getElementById('searchResultCount').textContent = `${results.length} pilihan`;
+      searchResults.innerHTML = results.length ? results.map((item,index) => `
+        <article class="search-result-card">
+          <div class="search-result-visual"><span class="search-result-badge">${item.badge}</span>${item.emoji}</div>
+          <div class="search-result-body"><h3>${item.name}</h3><p>${item.place}</p>
+            <div class="search-result-foot"><span class="search-result-price">${rupiah(item.price)}</span><button class="search-add" type="button" data-search-add="${index}" aria-label="Pilih ${item.name}">+</button></div>
+          </div>
+        </article>`).join('') : `<div class="search-empty"><div style="font-size:2rem">🔎</div><strong>Belum ada hasil yang cocok</strong><span>Coba kata kunci lain atau pilih kategori berbeda.</span></div>`;
+      searchResults.querySelectorAll('[data-search-add]').forEach(button => {
+        button.addEventListener('click', () => {
+          const item = results[Number(button.dataset.searchAdd)];
+          addToCart(item);
+        });
+      });
+    }
+    nitipuuySearchField.addEventListener('input', renderSearchResults);
+    document.getElementById('clearSearch').addEventListener('click', () => {
+      nitipuuySearchField.value = '';
+      renderSearchResults();
+      nitipuuySearchField.focus();
+    });
+    document.querySelectorAll('#searchCategoryChips [data-category]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('#searchCategoryChips [data-category]').forEach(chip => chip.classList.remove('active'));
+        button.classList.add('active');
+        activeSearchCategory = button.dataset.category;
+        renderSearchResults();
+      });
+    });
+    renderSearchResults();
+
+
+    // Keranjang dan checkout lokal: data disimpan di Local Storage perangkat.
+    const CART_KEY='nitipuuy_cart_v14', ADDRESS_KEY='nitipuuy_addresses_v14', ORDER_KEY='nitipuuy_orders_v14';
+    let cart=JSON.parse(localStorage.getItem(CART_KEY)||'[]');
+    let addresses=[]; try { addresses=JSON.parse(localStorage.getItem(ADDRESS_KEY)||'[]'); if(!Array.isArray(addresses)) addresses=[]; } catch { addresses=[]; }
+    let checkoutStep=1, selectedAddress=Math.max(0, addresses.findIndex(a=>a.isDefault));
+    const checkoutBackdrop=document.getElementById('checkoutBackdrop'), checkoutBody=document.getElementById('checkoutBody');
+    const catalog=[...searchProducts,
+      {name:'Burger Klasik',place:'Burger Corner • Purwakarta',price:25000,category:'Makanan',emoji:'🍔'},
+      {name:'Ayam Crispy',place:'Dapur Sambal • Purwakarta',price:20000,category:'Makanan',emoji:'🍗'},
+      {name:'Kentang Goreng',place:'Snack Corner • Purwakarta',price:15000,category:'Camilan',emoji:'🍟'},
+      {name:'Mie Pedas',place:'Mie Level • Purwakarta',price:17000,category:'Makanan',emoji:'🍜'}
+    ];
+    function persistCart(){localStorage.setItem(CART_KEY,JSON.stringify(cart));updateCartBadge();}
+    function updateCartBadge(){document.getElementById('cartCount').textContent=cart.reduce((n,x)=>n+x.qty,0);document.getElementById('cartFab').style.display=cart.length?'flex':'none';}
+    function addToCart(item){let found=cart.find(x=>x.name===item.name);if(found)found.qty++;else cart.push({...item,qty:1});persistCart();showToast(item.name+' ditambahkan ke keranjang.');}
+    document.querySelectorAll('[data-add]').forEach(button=>button.addEventListener('click',()=>{const item=catalog.find(x=>x.name.toLowerCase()===button.dataset.add.toLowerCase())||{name:button.dataset.add,place:'Pilihan menu',price:20000,category:'Menu',emoji:'🍽️'};addToCart(item);}));
+    function subtotal(){return cart.reduce((n,x)=>n+x.price*x.qty,0)}
+    function openCheckout(step=1){checkoutStep=step;checkoutBackdrop.classList.add('show');checkoutBackdrop.setAttribute('aria-hidden','false');renderCheckout();}
+    function closeCheckout(){checkoutBackdrop.classList.remove('show');checkoutBackdrop.setAttribute('aria-hidden','true');}
+    document.getElementById('cartFab').addEventListener('click',()=>openCheckout(1));
+    document.getElementById('checkoutClose').addEventListener('click',closeCheckout);
+    checkoutBackdrop.addEventListener('click',e=>{if(e.target===checkoutBackdrop)closeCheckout();});
+    function renderCheckout(){
+      document.querySelectorAll('#checkoutProgress span').forEach((el,i)=>el.classList.toggle('done',i<checkoutStep));
+      const titles=['Keranjang titipan','Alamat pengantaran','Konfirmasi pesanan'];document.getElementById('checkoutTitle').textContent=titles[checkoutStep-1];
+      if(checkoutStep===1){
+        checkoutBody.innerHTML=cart.length?`<div class="checkout-section"><h3>Menu pilihan kamu</h3>${cart.map((x,i)=>`<div class="checkout-row"><div><strong>${x.emoji} ${escapeHtml(x.name)}</strong><div class="checkout-muted">${rupiah(x.price)} · ${escapeHtml(x.place)}</div></div><div class="checkout-qty"><button data-qty-minus="${i}" aria-label="Kurangi">−</button><b>${x.qty}</b><button data-qty-plus="${i}" aria-label="Tambah">+</button></div></div>`).join('')}<div class="checkout-row"><b>Subtotal menu</b><strong>${rupiah(subtotal())}</strong></div></div><div class="checkout-section"><label class="checkout-field">Catatan untuk mitra<textarea class="checkout-note" id="cartNote" placeholder="Contoh: sambal dipisah, es sedikit..."></textarea></label></div><div class="checkout-actions"><button class="checkout-next" id="checkoutContinue">Lanjut pilih alamat →</button></div>`:`<div class="checkout-empty"><div style="font-size:2.5rem">🛒</div><b>Keranjang masih kosong</b><p>Pilih menu dari halaman Beranda atau Cari terlebih dahulu.</p><button class="checkout-next" id="backToSearch">Cari menu</button></div>`;
+        checkoutBody.querySelectorAll('[data-qty-minus]').forEach(b=>b.onclick=()=>{let i=+b.dataset.qtyMinus;cart[i].qty--;if(cart[i].qty<=0)cart.splice(i,1);persistCart();renderCheckout();});
+        checkoutBody.querySelectorAll('[data-qty-plus]').forEach(b=>b.onclick=()=>{cart[+b.dataset.qtyPlus].qty++;persistCart();renderCheckout();});
+        document.getElementById('checkoutContinue')?.addEventListener('click',()=>{checkoutNote=document.getElementById('cartNote')?.value||'';checkoutStep=2;renderCheckout();});
+        document.getElementById('backToSearch')?.addEventListener('click',()=>{closeCheckout();navigateTo('Cari');});
+      } else if(checkoutStep===2){
+        checkoutBody.innerHTML=`<div class="checkout-section"><h3>📍 Pilih alamat pengantaran</h3>${addresses.length?addresses.map((a,i)=>`<label class="address-choice"><input type="radio" name="chosenAddress" value="${i}" ${i===selectedAddress?'checked':''}><span><b>${escapeHtml(a.label)}</b><br>${escapeHtml(a.name)} · ${escapeHtml(a.phone)}<div class="checkout-muted">${escapeHtml(a.detail)}${a.note?' · '+escapeHtml(a.note):''}</div></span></label>`).join(''):'<p class="checkout-muted">Belum ada alamat tersimpan. Tambahkan alamat untuk melanjutkan.</p>'}</div><div class="checkout-section"><h3>＋ Tambah alamat baru</h3><form id="addressForm"><label class="checkout-field">Label alamat<input class="checkout-input" name="label" required placeholder="Rumah, Kantor, dll."></label><label class="checkout-field">Nama penerima<input class="checkout-input" name="name" required placeholder="Nama lengkap"></label><label class="checkout-field">Nomor telepon<input class="checkout-input" name="phone" required inputmode="tel" placeholder="08xxxxxxxxxx"></label><label class="checkout-field">Alamat lengkap<input class="checkout-input" name="detail" required placeholder="Jalan, nomor rumah, RT/RW, desa/kelurahan, kecamatan"></label><label class="checkout-field">Patokan / catatan (opsional)<input class="checkout-input" name="note" placeholder="Contoh: pagar hitam, dekat masjid"></label><button class="checkout-next" type="submit">Simpan alamat</button></form></div><div class="checkout-actions"><button class="checkout-back" id="checkoutPrev">← Kembali</button><button class="checkout-next" id="checkoutAddressNext" ${addresses.length?'':'disabled'}>Lanjut konfirmasi →</button></div>`;
+        checkoutBody.querySelectorAll('[name="chosenAddress"]').forEach(r=>r.onchange=()=>selectedAddress=+r.value);
+        document.getElementById('addressForm').addEventListener('submit',e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));d.isDefault=addresses.length===0;addresses.push(d);selectedAddress=addresses.length-1;localStorage.setItem(ADDRESS_KEY,JSON.stringify(addresses));renderCheckout();showToast('Alamat berhasil disimpan di perangkat.');});
+        document.getElementById('checkoutPrev').onclick=()=>{checkoutStep=1;renderCheckout();};
+        document.getElementById('checkoutAddressNext').onclick=()=>{if(!addresses.length)return;checkoutStep=3;renderCheckout();};
+      } else {
+        const a=addresses[selectedAddress]||addresses[0];
+        checkoutBody.innerHTML=`<div class="checkout-section"><h3>Ringkasan titipan</h3>${cart.map(x=>`<div class="checkout-row"><span>${x.emoji} ${escapeHtml(x.name)} × ${x.qty}</span><b>${rupiah(x.price*x.qty)}</b></div>`).join('')}<div class="checkout-row"><b>Subtotal menu</b><b>${rupiah(subtotal())}</b></div><div class="checkout-row"><span>Ongkos mitra</span><span class="checkout-muted">Dihitung / disepakati dengan mitra</span></div><div class="checkout-row"><b>Metode pembayaran</b><b>💵 ${escapeHtml(localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)')}</b></div></div><div class="checkout-section"><h3>📍 Alamat tujuan</h3><b>${escapeHtml(a.label)} — ${escapeHtml(a.name)}</b><p class="checkout-muted">${escapeHtml(a.phone)}<br>${escapeHtml(a.detail)}${a.note?'<br>'+escapeHtml(a.note):''}</p></div><div class="checkout-section checkout-muted">Total akhir dapat berubah setelah ongkos mitra disepakati. Prototipe ini belum memproses pembayaran sungguhan.</div><div class="checkout-actions"><button class="checkout-back" id="checkoutPrev">← Ubah alamat</button><button class="checkout-next" id="placeOrder">Buat pesanan</button></div>`;
+        document.getElementById('checkoutPrev').onclick=()=>{checkoutStep=2;renderCheckout();};
+        document.getElementById('placeOrder').onclick=()=>{const now=new Date();const id='NT-'+now.getFullYear()+'-'+String(Date.now()).slice(-6);const order={id,date:now.toLocaleString('id-ID'),name:cart.map(x=>x.name+' × '+x.qty).join(', '),place:'Beberapa tempat',emoji:'🛍️',total:subtotal(),status:'Diproses',payment:localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)',customerNote:checkoutNote,note:'Pesanan baru dibuat. Menunggu mitra menerima.',steps:['Pesanan dibuat','Menunggu mitra menerima pesanan'],address:a,items:cart.map(x=>({...x}))};let saved=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');saved.unshift(order);localStorage.setItem(ORDER_KEY,JSON.stringify(saved));cart=[];checkoutNote='';persistCart();closeCheckout();showToast('Pesanan '+id+' berhasil dibuat!');navigateTo('Pesanan');};
+      }
+    }
+    let checkoutNote='';
+    updateCartBadge();
+
+    // Data contoh untuk menguji tampilan Pesanan dan Riwayat. Belum berasal dari transaksi nyata.
+    const demoOrders = [
+      {id:'NT-2026-001',date:'3 Nov 2026 • 10.24',name:'Seblak Komplit',place:'Seblak Teh Nia',emoji:'🍲',total:27000,status:'Dalam perjalanan',note:'Mitra sedang menuju alamat pengantaran.',steps:['Pesanan dibuat','Mitra menerima pesanan','Pesanan sedang diantar']},
+      {id:'NT-2026-002',date:'2 Nov 2026 • 15.10',name:'Es Kopi Susu × 2',place:'Kopi Sudut',emoji:'🧋',total:42000,status:'Diproses',note:'Mitra sedang membeli pesananmu.',steps:['Pesanan dibuat','Mitra menerima pesanan']},
+      {id:'NT-2026-003',date:'30 Okt 2026 • 12.05',name:'Burger Beef Cheese',place:'Burger Corner',emoji:'🍔',total:35000,status:'Selesai',note:'Pesanan telah diterima.',steps:['Pesanan dibuat','Mitra menerima pesanan','Pesanan diantar','Pesanan selesai']}
+    ];
+    let activeOrderFilter = 'Semua';
+    function renderOrders() {
+      const list = document.getElementById('orderList');
+      const allOrders = [...JSON.parse(localStorage.getItem(ORDER_KEY)||'[]'), ...demoOrders];
+      const filtered = allOrders.filter(order => activeOrderFilter === 'Semua' || order.status === activeOrderFilter);
+      list.innerHTML = filtered.length ? filtered.map(order => {
+        const statusClass = order.status === 'Selesai' ? 'done' : '';
+        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button></div></article>`;
+      }).join('') : `<div class="orders-empty"><div class="empty-emoji">🛍️</div><strong>Belum ada pesanan ${activeOrderFilter.toLowerCase()}</strong><p>Pesanan dengan status ini akan muncul di sini.</p></div>`;
+      list.querySelectorAll('[data-order-detail]').forEach(button => button.addEventListener('click', () => {
+        const order = allOrders.find(item => item.id === button.dataset.orderDetail);
+        showModal(`Detail ${order.id}`, `${order.name}\n${order.place}\nStatus: ${order.status}\nTotal: ${rupiah(order.total)}\n\n${order.steps.map((step,index) => `${index+1}. ${step}`).join('\n')}\n\n${order.note}`);
+      }));
+    }
+    document.querySelectorAll('[data-order-filter]').forEach(button => button.addEventListener('click', () => {
+      activeOrderFilter = button.dataset.orderFilter;
+      document.querySelectorAll('[data-order-filter]').forEach(tab => tab.classList.toggle('active', tab === button));
+      renderOrders();
+    }));
+
+    function getRealOrders(){try{const v=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return [];}}
+    function saveRealOrders(items){localStorage.setItem(ORDER_KEY,JSON.stringify(items));}
+    function renderMitraDashboard(){
+      const orders=getRealOrders();
+      const incoming=orders.filter(o=>/menunggu mitra|diproses/i.test(o.status||'') && !(o.steps||[]).some(x=>/mitra menerima/i.test(x)));
+      const active=orders.filter(o=>/diterima|disiapkan|perjalanan/i.test(o.status||''));
+      const done=orders.filter(o=>/selesai/i.test(o.status||''));
+      document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
+      const list=document.getElementById('mitraOrderList');
+      list.innerHTML=orders.length?orders.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(/menunggu mitra|diproses/i.test(status)&&!(o.steps||[]).some(x=>/mitra menerima/i.test(x)))actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o.id)}">Terima</button><button class="reject" data-mitra-action="reject" data-id="${escapeHtml(o.id)}">Tolak</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o.id)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o.id)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o.id)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.address?.detail||o.place||'Alamat belum tersedia')}</p><p>💵 ${rupiah(o.total||0)} · ${escapeHtml(o.payment||'Tunai (COD)')}</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah dibuat pada perangkat ini.</p></div>';
+      list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));
+    }
+    function updateMitraOrder(id,action){const orders=getRealOrders(),o=orders.find(x=>x.id===id);if(!o)return;const map={accept:['Diterima','Mitra menerima pesanan'],prepare:['Disiapkan','Mitra mulai menyiapkan pesanan'],deliver:['Dalam perjalanan','Mitra mulai mengantar pesanan'],complete:['Selesai','Pesanan berhasil diselesaikan'],reject:['Ditolak','Mitra menolak pesanan']};const next=map[action];if(!next)return;if(action==='reject'&&!confirm('Yakin ingin menolak pesanan ini?'))return;o.status=next[0];o.note=next[1]+'.';o.steps=Array.isArray(o.steps)?o.steps:[];o.steps.push(next[1]);saveRealOrders(orders);renderMitraDashboard();renderProfile();showToast('Status pesanan diperbarui: '+next[0]);}
+    document.getElementById('switchBuyer').addEventListener('click',()=>{localStorage.setItem(ROLE_KEY,'Pembeli');renderProfile();navigateTo('Beranda');showToast('Kembali ke Mode Pembeli.');});
+    function renderActivity() {
+      const activity = [
+        {icon:'✅',title:'Pesanan selesai',desc:'Burger Beef Cheese dari Burger Corner telah diterima.',time:'30 Okt 2026 · 12.05'},
+        {icon:'🛵',title:'Mitra menerima pesanan',desc:'Pesanan Es Kopi Susu sedang diproses oleh mitra.',time:'2 Nov 2026 · 15.14'},
+        {icon:'🧾',title:'Pesanan dibuat',desc:'Pesanan Es Kopi Susu × 2 berhasil dicatat.',time:'2 Nov 2026 · 15.10'},
+        {icon:'📦',title:'Pesanan sedang diantar',desc:'Seblak Komplit sedang menuju alamat pengantaran.',time:'3 Nov 2026 · 10.24'}
+      ];
+      document.getElementById('activityList').innerHTML = activity.map(item => `<article class="activity-item"><div class="activity-icon">${item.icon}</div><div class="activity-copy"><strong>${item.title}</strong><p>${item.desc}</p><small>${item.time}</small></div></article>`).join('');
+    }
+    renderOrders();
+    renderActivity();
+
+    const PROFILE_KEY = 'nitipuuy_profile';
+    const ROLE_KEY = 'nitipuuy_account_mode';
+    const PAYMENT_KEY = 'nitipuuy_payment_method';
+    const profileDefaults = { name: 'Ref Pengguna', phone: '', email: '' };
+    function getProfile() {
+      try { return { ...profileDefaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') }; }
+      catch { return { ...profileDefaults }; }
+    }
+    function getAddresses() {
+      try { const value = JSON.parse(localStorage.getItem(ADDRESS_KEY) || '[]'); return Array.isArray(value) ? value : []; }
+      catch { return []; }
+    }
+    function saveAddresses(list) {
+      addresses = list;
+      localStorage.setItem(ADDRESS_KEY, JSON.stringify(list));
+    }
+    function renderProfile() {
+      const data = getProfile();
+      document.getElementById('profileDisplayName').textContent = data.name || 'Pengguna Nitipuuy';
+      document.getElementById('profileDisplayPhone').textContent = data.phone || 'Belum ada nomor telepon';
+      document.getElementById('profileAvatar').textContent = (data.name || 'N').trim().charAt(0).toUpperCase();
+      const orders = (() => { try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '[]'); } catch { return []; } })();
+      document.getElementById('profileTotalOrders').textContent = orders.length;
+      document.getElementById('profileActiveOrders').textContent = orders.filter(o => !/selesai|dibatalkan/i.test(o.status || '')).length;
+      document.getElementById('profileCompletedOrders').textContent = orders.filter(o => /selesai/i.test(o.status || '')).length;
+      const addressCount = getAddresses().length;
+      document.querySelector('[data-profile-action="address"] small').textContent = `${addressCount} alamat tersimpan · Kelola alamat pengantaran`;
+      document.querySelector('[data-profile-action="role"] small').textContent = `Mode aktif: ${localStorage.getItem(ROLE_KEY) || 'Pembeli'}`;
+    }
+    function openProfileForm(title, fields, values, onSave) {
+      modalTitle.textContent = title;
+      modalText.innerHTML = '';
+      const form = document.createElement('form'); form.className = 'profile-form';
+      form.innerHTML = fields + '<div class="modal-actions"><button type="button" class="secondary-button" id="profileCancel">Batal</button><button type="submit" class="primary-button">Simpan</button></div>';
+      modalText.replaceWith(form);
+      form.addEventListener('submit', e => { e.preventDefault(); if (onSave(new FormData(form), form) !== false) { form.replaceWith(modalText); modal.classList.remove('show'); renderProfile(); } });
+      form.querySelector('#profileCancel').addEventListener('click', () => { form.replaceWith(modalText); modal.classList.remove('show'); });
+      modal.classList.add('show');
+      const first = form.querySelector('input,textarea,select'); if (first) first.focus();
+      return form;
+    }
+    function openPersonalInfo() {
+      const d = getProfile();
+      openProfileForm('Informasi pribadi', `
+        <label>Nama lengkap<input name="name" maxlength="60" required value="${escapeHtml(d.name)}" placeholder="Nama sesuai identitas"></label>
+        <label>Nomor telepon<input name="phone" inputmode="tel" maxlength="20" required value="${escapeHtml(d.phone)}" placeholder="08xxxxxxxxxx"></label>
+        <label>Email<input name="email" type="email" maxlength="100" value="${escapeHtml(d.email)}" placeholder="nama@email.com"></label>
+        <div class="profile-hint">Gunakan nomor telepon aktif agar mitra dapat menghubungi penerima pesanan.</div>`, d, fd => {
+          const values = Object.fromEntries(fd.entries()); values.name = values.name.trim(); values.phone = values.phone.trim(); values.email = values.email.trim();
+          if (!values.name || !values.phone) { showToast('Nama dan nomor telepon wajib diisi.'); return false; }
+          if (!/^[0-9+() .-]{8,20}$/.test(values.phone)) { showToast('Periksa kembali format nomor telepon.'); return false; }
+          try { localStorage.setItem(PROFILE_KEY, JSON.stringify(values)); } catch { showToast('Gagal menyimpan profil di perangkat.'); return false; }
+          showToast('Informasi pribadi berhasil disimpan.');
+        });
+    }
+    function openAddressBook() {
+      const list = getAddresses();
+      modalTitle.textContent = 'Alamat tersimpan'; modalText.innerHTML = '';
+      const wrap = document.createElement('div'); wrap.className = 'profile-address-book';
+      const cards = list.length ? list.map((a,i)=>`<article class="profile-address-card"><b>${escapeHtml(a.label || 'Alamat')}</b><p>${escapeHtml(a.name || '')} · ${escapeHtml(a.phone || '')}<br>${escapeHtml(a.detail || '')}${a.note ? '<br>Patokan: '+escapeHtml(a.note):''}</p><div class="profile-inline-actions"><button type="button" data-default-address="${i}">Jadikan utama</button><button type="button" data-edit-address="${i}">Edit</button><button type="button" class="danger" data-delete-address="${i}">Hapus</button></div>${a.isDefault ? '<small>⭐ Alamat utama</small>':''}</article>`).join('') : '<div class="profile-hint">Belum ada alamat tersimpan. Tambahkan alamat rumah, kantor, atau lokasi favorit.</div>';
+      wrap.innerHTML = `<div class="profile-address-list">${cards}</div><button type="button" class="primary-button" id="addProfileAddress">＋ Tambah alamat</button><div class="modal-actions"><button type="button" class="secondary-button" id="profileCancel">Tutup</button></div>`;
+      modalText.replaceWith(wrap); modal.classList.add('show');
+      const close=()=>{wrap.replaceWith(modalText);modal.classList.remove('show');renderProfile();};
+      wrap.querySelector('#profileCancel').onclick=close;
+      wrap.querySelector('#addProfileAddress').onclick=()=>{wrap.replaceWith(modalText);modal.classList.remove('show');editAddressForm(null);};
+      wrap.querySelectorAll('[data-edit-address]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.editAddress);wrap.replaceWith(modalText);modal.classList.remove('show');editAddressForm(i);});
+      wrap.querySelectorAll('[data-delete-address]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.deleteAddress);if(confirm('Hapus alamat ini?')){const next=getAddresses().filter((_,n)=>n!==i);if(next.length&&!next.some(a=>a.isDefault))next[0].isDefault=true;saveAddresses(next);close();showToast('Alamat dihapus.');}});
+      wrap.querySelectorAll('[data-default-address]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.defaultAddress);const next=getAddresses().map((a,n)=>({...a,isDefault:n===i}));saveAddresses(next);close();showToast('Alamat utama diperbarui.');});
+    }
+    function editAddressForm(index) {
+      const list=getAddresses(), old=index===null?{label:'',name:getProfile().name,phone:getProfile().phone,detail:'',note:''}:list[index];
+      const fields=`<label>Label alamat<input name="label" required maxlength="30" value="${escapeHtml(old.label||'')}" placeholder="Rumah, Kantor, Kos"></label><label>Nama penerima<input name="name" required maxlength="60" value="${escapeHtml(old.name||'')}"></label><label>Nomor telepon<input name="phone" required inputmode="tel" maxlength="20" value="${escapeHtml(old.phone||'')}"></label><label>Alamat lengkap<textarea name="detail" required maxlength="300" placeholder="Jalan, nomor rumah, RT/RW, desa/kelurahan, kecamatan">${escapeHtml(old.detail||'')}</textarea></label><label>Patokan / catatan<input name="note" maxlength="120" value="${escapeHtml(old.note||'')}" placeholder="Dekat masjid, pagar hitam..."></label><label class="profile-choice"><input type="checkbox" name="isDefault" ${old.isDefault||!list.length?'checked':''}> Jadikan alamat utama</label>`;
+      openProfileForm(index===null?'Tambah alamat':'Edit alamat',fields,old,fd=>{const item=Object.fromEntries(fd.entries());item.isDefault=fd.get('isDefault')==='on';if(!item.label.trim()||!item.name.trim()||!item.phone.trim()||!item.detail.trim()){showToast('Lengkapi label, penerima, telepon, dan alamat.');return false;}let next=getAddresses();if(item.isDefault)next=next.map(a=>({...a,isDefault:false}));if(index===null)next.push(item);else next[index]=item;if(!next.some(a=>a.isDefault)&&next.length)next[0].isDefault=true;try{saveAddresses(next);}catch{showToast('Gagal menyimpan alamat.');return false;}showToast('Alamat berhasil disimpan.');return true;});
+    }
+    function openAccountMode() {
+      const current=localStorage.getItem(ROLE_KEY)||'Pembeli';
+      openProfileForm('Mode akun',`<p class="profile-hint">Pilih mode yang ingin digunakan. Prototipe ini belum mengaktifkan fitur operasional mitra.</p><label class="profile-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}> 🛍️ Pembeli — mencari dan memesan titipan</label><label class="profile-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}> 🛵 Mitra — menerima dan mengantar titipan (simulasi)</label>`,{},fd=>{const chosen=fd.get('role')||'Pembeli';localStorage.setItem(ROLE_KEY,chosen);showToast('Mode akun diperbarui.');setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),120);});
+    }
+    function openPaymentSettings() {
+      const current=localStorage.getItem(PAYMENT_KEY)||'Tunai (COD)';
+      openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
+    }
+    function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Nitipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
+    function openAbout() { showModal('Tentang Nitipuuy','Nitipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 1.6 · Dual mode frontend demo · Profil, alamat, keranjang, dan pesanan disimpan lokal di browser dan belum tersinkron ke server.'); }
+    renderProfile();
+    document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
+    document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
+      const actions={personal:openPersonalInfo,address:openAddressBook,role:openAccountMode,payment:openPaymentSettings,help:openHelp,about:openAbout};
+      (actions[button.dataset.profileAction]||openAbout)();
+    }));
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    }
+
+    document.querySelectorAll('[data-category]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-category]').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        filterFoods();
+      });
+    });
+
+    document.querySelectorAll('[data-add]').forEach(button => {
+      button.addEventListener('click', () => showModal('Titip ' + button.dataset.add, 'Ini contoh interaksi prototipe. Alur pilihan menu, catatan pesanan, alamat, dan konfirmasi akan dibuat pada tahap berikutnya.'));
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', filterFoods);
+    function filterFoods() {
+      const query = searchInput.value.trim().toLowerCase();
+      const category = document.querySelector('[data-category].active')?.dataset.category || 'Semua';
+      let visible = 0;
+      document.querySelectorAll('.food-card').forEach(card => {
+        const matchesQuery = card.dataset.name.toLowerCase().includes(query);
+        const matchesCategory = category === 'Semua' || card.dataset.category === category;
+        const show = matchesQuery && matchesCategory;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      document.getElementById('emptyState').style.display = visible ? 'none' : 'block';
+    }
+  </script>
+</body>
+</html>
