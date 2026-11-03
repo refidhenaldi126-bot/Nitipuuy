@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Nitipuuy v1.7 — Firebase Authentication</title>
+  <title>Nitipuuy v1.8 — Firebase Profile Sync</title>
   <style>
     :root {
       --orange: #f98413;
@@ -686,6 +686,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
   <script>
     const toast = document.getElementById('toast');
     const modal = document.getElementById('modal');
@@ -693,7 +694,8 @@
     const modalText = document.getElementById('modalText');
     let toastTimer;
 
-    // Firebase Authentication (v1.7). Database remains locked until secure rules are deployed.
+    // Firebase Authentication + Realtime Database (v1.8).
+    // Database writes require the owner-only rules supplied with this release.
     const firebaseConfig = {
       apiKey: "AIzaSyCN10a81vb2miDx4ScYgxuDS_W3OxM1AB0",
       authDomain: "nitipuuy.firebaseapp.com",
@@ -704,6 +706,7 @@
       appId: "1:179809248695:web:050b56643ead608d597432"
     };
     let firebaseAuth = null;
+    let firebaseDb = null;
     let currentFirebaseUser = null;
     let authIsRegister = false;
     const authGate = document.getElementById('authGate');
@@ -783,11 +786,27 @@
       if(!window.firebase || !firebase.initializeApp) throw new Error('Firebase SDK tidak berhasil dimuat. Periksa koneksi internet atau pemblokir konten.');
       if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       firebaseAuth=firebase.auth();
-      firebaseAuth.onAuthStateChanged(user=>{
+      firebaseDb=firebase.database();
+      firebaseAuth.onAuthStateChanged(async user=>{
         currentFirebaseUser=user||null;
         if(user){
           authGate.hidden=true; installAccountControls(user);
-          try{const existing=JSON.parse(localStorage.getItem('nitipuuy_profile')||'{}');localStorage.setItem('nitipuuy_profile',JSON.stringify({...existing,name:existing.name||user.displayName||'',email:user.email||existing.email||''}));}catch{}
+          try{
+            const ref=firebaseDb.ref('users/'+user.uid);
+            const snap=await ref.once('value');
+            const cloud=snap.val()||{};
+            const existing=JSON.parse(localStorage.getItem('nitipuuy_profile')||'{}');
+            const profile={...existing,...(cloud.profile||{}),name:(cloud.profile&&cloud.profile.name)||existing.name||user.displayName||'',email:user.email||existing.email||''};
+            localStorage.setItem('nitipuuy_profile',JSON.stringify(profile));
+            if(cloud.role) localStorage.setItem('nitipuuy_account_mode',cloud.role);
+            if(!cloud.profile) await ref.child('profile').set({name:profile.name,email:profile.email,photoURL:user.photoURL||'',phone:profile.phone||'',updatedAt:firebase.database.ServerValue.TIMESTAMP});
+            if(!cloud.role) await ref.child('role').set(localStorage.getItem('nitipuuy_account_mode')||'Pembeli');
+            showToast('Profil berhasil disinkronkan.');
+          }catch(error){
+            console.warn('Sinkronisasi profil Firebase gagal:',error);
+            showToast(error.code==='PERMISSION_DENIED'?'Akses database ditolak. Periksa Security Rules Firebase.':'Profil dimuat lokal; sinkronisasi cloud belum berhasil.');
+            try{const existing=JSON.parse(localStorage.getItem('nitipuuy_profile')||'{}');localStorage.setItem('nitipuuy_profile',JSON.stringify({...existing,name:existing.name||user.displayName||'',email:user.email||existing.email||''}));}catch{}
+          }
           if(typeof renderProfile==='function') renderProfile();
         }else{
           authGate.hidden=false; removeAccountControls();
@@ -1015,6 +1034,18 @@
       try { return { ...profileDefaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') }; }
       catch { return { ...profileDefaults }; }
     }
+    async function saveCloudProfile(profile) {
+      if(!currentFirebaseUser || !firebaseDb) return;
+      await firebaseDb.ref('users/'+currentFirebaseUser.uid+'/profile').update({
+        name:profile.name||'', email:currentFirebaseUser.email||profile.email||'',
+        photoURL:currentFirebaseUser.photoURL||'', phone:profile.phone||'',
+        updatedAt:firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+    async function saveCloudRole(role) {
+      if(!currentFirebaseUser || !firebaseDb) return;
+      await firebaseDb.ref('users/'+currentFirebaseUser.uid+'/role').set(role);
+    }
     function getAddresses() {
       try { const value = JSON.parse(localStorage.getItem(ADDRESS_KEY) || '[]'); return Array.isArray(value) ? value : []; }
       catch { return []; }
@@ -1059,7 +1090,8 @@
           if (!values.name || !values.phone) { showToast('Nama dan nomor telepon wajib diisi.'); return false; }
           if (!/^[0-9+() .-]{8,20}$/.test(values.phone)) { showToast('Periksa kembali format nomor telepon.'); return false; }
           try { localStorage.setItem(PROFILE_KEY, JSON.stringify(values)); } catch { showToast('Gagal menyimpan profil di perangkat.'); return false; }
-          showToast('Informasi pribadi berhasil disimpan.');
+          showToast('Profil tersimpan di perangkat. Menyinkronkan ke cloud…');
+          saveCloudProfile(values).then(()=>showToast('Profil berhasil disimpan ke Firebase.')).catch(error=>{console.warn(error);showToast('Tersimpan lokal, tetapi Firebase menolak sinkronisasi. Periksa Security Rules.');});
         });
     }
     function openAddressBook() {
@@ -1083,14 +1115,14 @@
     }
     function openAccountMode() {
       const current=localStorage.getItem(ROLE_KEY)||'Pembeli';
-      openProfileForm('Mode akun',`<p class="profile-hint">Pilih mode yang ingin digunakan. Prototipe ini belum mengaktifkan fitur operasional mitra.</p><label class="profile-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}> 🛍️ Pembeli — mencari dan memesan titipan</label><label class="profile-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}> 🛵 Mitra — menerima dan mengantar titipan (simulasi)</label>`,{},fd=>{const chosen=fd.get('role')||'Pembeli';localStorage.setItem(ROLE_KEY,chosen);showToast('Mode akun diperbarui.');setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),120);});
+      openProfileForm('Mode akun',`<p class="profile-hint">Pilih mode yang ingin digunakan. Prototipe ini belum mengaktifkan fitur operasional mitra.</p><label class="profile-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}> 🛍️ Pembeli — mencari dan memesan titipan</label><label class="profile-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}> 🛵 Mitra — menerima dan mengantar titipan (simulasi)</label>`,{},fd=>{const chosen=fd.get('role')||'Pembeli';localStorage.setItem(ROLE_KEY,chosen);showToast('Mode akun diperbarui. Menyinkronkan…');saveCloudRole(chosen).then(()=>showToast('Mode akun tersimpan ke Firebase.')).catch(error=>{console.warn(error);showToast('Mode tersimpan lokal, tetapi sinkronisasi Firebase gagal.');});setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),120);});
     }
     function openPaymentSettings() {
       const current=localStorage.getItem(PAYMENT_KEY)||'Tunai (COD)';
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Nitipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Nitipuuy','Nitipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 1.7 · Firebase Authentication aktif. Profil, alamat, keranjang, dan pesanan masih tersimpan lokal; sinkronisasi database sedang disiapkan.'); }
+    function openAbout() { showModal('Tentang Nitipuuy','Nitipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 1.7 · Firebase Authentication aktif. Profil dasar dan mode akun disinkronkan ke Firebase; alamat, keranjang, dan pesanan masih tersimpan lokal.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
