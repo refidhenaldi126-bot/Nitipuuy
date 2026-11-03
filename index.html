@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v1.9.1 — Brand & Personal Greeting</title>
+  <title>Titipuuy v2.0 — Realtime Order System</title>
   <style>
     :root {
       --orange: #f98413;
@@ -624,7 +624,7 @@
     <section class="mitra-page" id="mitraPage">
       <div class="mitra-hero"><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p><button class="mitra-toggle" id="switchBuyer">← Kembali ke Mode Pembeli</button></div>
       <div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
-      <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersimpan pada perangkat ini</p></div></div><div id="mitraOrderList"></div>
+      <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersinkron melalui Firebase secara realtime</p></div></div><div id="mitraOrderList"></div>
     </section>
 
     <section class="profile-page" id="profilePage">
@@ -667,10 +667,10 @@
             <span class="profile-menu-icon">💬</span><span class="profile-menu-copy"><strong>Bantuan & dukungan</strong><small>Informasi dan bantuan penggunaan</small></span><span class="profile-chevron">›</span>
           </button>
           <button class="profile-menu-item" data-profile-action="about">
-            <span class="profile-menu-icon">🧡</span><span class="profile-menu-copy"><strong>Tentang Titipuuy</strong><small>Titipuuy v1.9.1 · Brand & Personal Greeting</small></span><span class="profile-chevron">›</span>
+            <span class="profile-menu-icon">🧡</span><span class="profile-menu-copy"><strong>Tentang Titipuuy</strong><small>Titipuuy v2.0 · Realtime Order System</small></span><span class="profile-chevron">›</span>
           </button>
         </div>
-        <div class="profile-note">🧡 Ini masih prototipe. Profil dasar dan mode akun tersinkron ke Firebase. Alamat, keranjang, dan pesanan masih tersimpan lokal pada perangkat ini.</div>
+        <div class="profile-note">🧡 Ini masih prototipe. Profil, mode akun, dan pesanan tersinkron ke Firebase. Alamat dan keranjang masih tersimpan lokal pada perangkat ini.</div>
       </section>
     </section>
 
@@ -813,7 +813,7 @@
       firebaseAuth=firebase.auth();
       firebaseDb=firebase.database();
       firebaseAuth.onAuthStateChanged(async user=>{
-        currentFirebaseUser=user||null;
+        currentFirebaseUser=user||null;orderListenersStarted=false;cloudBuyerOrders=[];cloudBoardOrders=[];cloudMitraOrders=[];
         if(user){
           updateWelcomeHeading(user);
           authGate.hidden=true; installAccountControls(user);
@@ -835,6 +835,7 @@
             try{const existing=JSON.parse(localStorage.getItem('nitipuuy_profile')||'{}');localStorage.setItem('nitipuuy_profile',JSON.stringify({...existing,name:existing.name||user.displayName||'',email:user.email||existing.email||''}));}catch{}
           }
           if(typeof renderProfile==='function') renderProfile();
+          startOrderListeners();
         }else{
           updateWelcomeHeading(null);
           authGate.hidden=false; removeAccountControls();
@@ -956,7 +957,8 @@
 
 
     // Keranjang dan checkout lokal: data disimpan di Local Storage perangkat.
-    const CART_KEY='nitipuuy_cart_v14', ADDRESS_KEY='nitipuuy_addresses_v14', ORDER_KEY='nitipuuy_orders_v14';
+    const CART_KEY='nitipuuy_cart_v14', ADDRESS_KEY='nitipuuy_addresses_v14', ORDER_KEY='titipuuy_orders_v20';
+    let cloudBuyerOrders=[]; let cloudBoardOrders=[]; let cloudMitraOrders=[]; let orderListenersStarted=false;
     let cart=JSON.parse(localStorage.getItem(CART_KEY)||'[]');
     let addresses=[]; try { addresses=JSON.parse(localStorage.getItem(ADDRESS_KEY)||'[]'); if(!Array.isArray(addresses)) addresses=[]; } catch { addresses=[]; }
     let checkoutStep=1, selectedAddress=Math.max(0, addresses.findIndex(a=>a.isDefault));
@@ -996,7 +998,17 @@
         const a=addresses[selectedAddress]||addresses[0];
         checkoutBody.innerHTML=`<div class="checkout-section"><h3>Ringkasan titipan</h3>${cart.map(x=>`<div class="checkout-row"><span>${x.emoji} ${escapeHtml(x.name)} × ${x.qty}</span><b>${rupiah(x.price*x.qty)}</b></div>`).join('')}<div class="checkout-row"><b>Subtotal menu</b><b>${rupiah(subtotal())}</b></div><div class="checkout-row"><span>Ongkos mitra</span><span class="checkout-muted">Dihitung / disepakati dengan mitra</span></div><div class="checkout-row"><b>Metode pembayaran</b><b>💵 ${escapeHtml(localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)')}</b></div></div><div class="checkout-section"><h3>📍 Alamat tujuan</h3><b>${escapeHtml(a.label)} — ${escapeHtml(a.name)}</b><p class="checkout-muted">${escapeHtml(a.phone)}<br>${escapeHtml(a.detail)}${a.note?'<br>'+escapeHtml(a.note):''}</p></div><div class="checkout-section checkout-muted">Total akhir dapat berubah setelah ongkos mitra disepakati. Prototipe ini belum memproses pembayaran sungguhan.</div><div class="checkout-actions"><button class="checkout-back" id="checkoutPrev">← Ubah alamat</button><button class="checkout-next" id="placeOrder">Buat pesanan</button></div>`;
         document.getElementById('checkoutPrev').onclick=()=>{checkoutStep=2;renderCheckout();};
-        document.getElementById('placeOrder').onclick=()=>{const now=new Date();const id='NT-'+now.getFullYear()+'-'+String(Date.now()).slice(-6);const order={id,date:now.toLocaleString('id-ID'),name:cart.map(x=>x.name+' × '+x.qty).join(', '),place:'Beberapa tempat',emoji:'🛍️',total:subtotal(),status:'Diproses',payment:localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)',customerNote:checkoutNote,note:'Pesanan baru dibuat. Menunggu mitra menerima.',steps:['Pesanan dibuat','Menunggu mitra menerima pesanan'],address:a,items:cart.map(x=>({...x}))};let saved=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');saved.unshift(order);localStorage.setItem(ORDER_KEY,JSON.stringify(saved));cart=[];checkoutNote='';persistCart();closeCheckout();showToast('Pesanan '+id+' berhasil dibuat!');navigateTo('Pesanan');};
+        document.getElementById('placeOrder').onclick=async()=>{
+          if(!currentFirebaseUser||!firebaseDb){showToast('Silakan login kembali untuk membuat pesanan cloud.');return;}
+          const submit=document.getElementById('placeOrder');submit.disabled=true;submit.textContent='Mengirim pesanan…';
+          try{const now=new Date();const orderRef=firebaseDb.ref('orders').push();const id='TT-'+now.getFullYear()+'-'+orderRef.key.slice(-6).toUpperCase();
+            const order={id,buyerUid:currentFirebaseUser.uid,mitraUid:null,date:now.toLocaleString('id-ID'),createdAt:firebase.database.ServerValue.TIMESTAMP,updatedAt:firebase.database.ServerValue.TIMESTAMP,name:cart.map(x=>x.name+' × '+x.qty).join(', '),place:'Beberapa tempat',emoji:'🛍️',total:subtotal(),status:'Menunggu mitra',payment:localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)',customerNote:checkoutNote,note:'Pesanan baru dibuat. Menunggu mitra menerima.',steps:['Pesanan dibuat','Menunggu mitra menerima pesanan'],address:a,items:cart.map(x=>({...x}))};
+            const board={id,mitraUid:null,name:order.name,place:order.place,total:order.total,status:order.status,createdAt:firebase.database.ServerValue.TIMESTAMP};
+            const updates={};updates['orders/'+orderRef.key]=order;updates['ordersByBuyer/'+currentFirebaseUser.uid+'/'+orderRef.key]=order;updates['orderBoard/'+orderRef.key]=board;await firebaseDb.ref().update(updates);
+            const saved=getRealOrders();saved.unshift({...order,_key:orderRef.key});saveRealOrders(saved);cart=[];checkoutNote='';persistCart();closeCheckout();showToast('Pesanan '+id+' berhasil dikirim ke Firebase!');navigateTo('Pesanan');renderOrders();
+          }catch(error){console.error('Gagal membuat pesanan cloud:',error);showToast(error.code==='PERMISSION_DENIED'?'Akses pesanan ditolak. Periksa Firebase Security Rules v2.0.':'Pesanan gagal dikirim. Periksa koneksi lalu coba lagi.');}
+          finally{submit.disabled=false;submit.textContent='Buat pesanan';}
+        };
       }
     }
     let checkoutNote='';
@@ -1011,7 +1023,7 @@
     let activeOrderFilter = 'Semua';
     function renderOrders() {
       const list = document.getElementById('orderList');
-      const allOrders = [...JSON.parse(localStorage.getItem(ORDER_KEY)||'[]'), ...demoOrders];
+      const realOrders = allBuyerOrders(); const allOrders = currentFirebaseUser ? realOrders : [...demoOrders];
       const filtered = allOrders.filter(order => activeOrderFilter === 'Semua' || order.status === activeOrderFilter);
       list.innerHTML = filtered.length ? filtered.map(order => {
         const statusClass = order.status === 'Selesai' ? 'done' : '';
@@ -1030,17 +1042,52 @@
 
     function getRealOrders(){try{const v=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return [];}}
     function saveRealOrders(items){localStorage.setItem(ORDER_KEY,JSON.stringify(items));}
+    function allBuyerOrders(){return cloudBuyerOrders.length?cloudBuyerOrders:getRealOrders();}
+    function startOrderListeners(){
+      if(!firebaseDb||!currentFirebaseUser||orderListenersStarted)return;orderListenersStarted=true;
+      firebaseDb.ref('ordersByBuyer/'+currentFirebaseUser.uid).on('value',snap=>{
+        cloudBuyerOrders=Object.entries(snap.val()||{}).map(([key,value])=>({...value,_key:key})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+        saveRealOrders(cloudBuyerOrders);renderOrders();renderProfile();
+      },err=>{console.warn('Listener pesanan pembeli:',err);showToast('Tidak dapat memuat pesanan pembeli. Periksa Rules Firebase.');});
+      firebaseDb.ref('orderBoard').on('value',snap=>{
+        cloudBoardOrders=Object.entries(snap.val()||{}).map(([key,value])=>({...value,_key:key})).filter(o=>!o.mitraUid||o.mitraUid===currentFirebaseUser.uid).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+        loadMitraPrivateOrders();
+      },err=>{console.warn('Listener papan pesanan:',err);showToast('Papan pesanan Mitra belum dapat diakses. Periksa Rules Firebase.');});
+    }
+    function loadMitraPrivateOrders(){
+      if(!firebaseDb||!currentFirebaseUser)return;
+      const mine=cloudBoardOrders.filter(o=>o.mitraUid===currentFirebaseUser.uid);
+      Promise.all(mine.map(async o=>{const snap=await firebaseDb.ref('orders/'+o._key).once('value');return snap.exists()?{...snap.val(),_key:o._key}:null;})).then(rows=>{
+        cloudMitraOrders=rows.filter(Boolean);renderMitraDashboard();
+      }).catch(err=>console.warn('Gagal membaca detail pesanan Mitra:',err));
+      renderMitraDashboard();
+    }
     function renderMitraDashboard(){
-      const orders=getRealOrders();
-      const incoming=orders.filter(o=>/menunggu mitra|diproses/i.test(o.status||'') && !(o.steps||[]).some(x=>/mitra menerima/i.test(x)));
-      const active=orders.filter(o=>/diterima|disiapkan|perjalanan/i.test(o.status||''));
-      const done=orders.filter(o=>/selesai/i.test(o.status||''));
+      const role=localStorage.getItem(ROLE_KEY)||'Pembeli';if(role!=='Mitra')return;
+      const incoming=cloudBoardOrders.filter(o=>!o.mitraUid&&o.status==='Menunggu mitra');
+      const active=cloudMitraOrders.filter(o=>/diterima|disiapkan|perjalanan/i.test(o.status||''));
+      const done=cloudMitraOrders.filter(o=>/selesai/i.test(o.status||''));
       document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
       const list=document.getElementById('mitraOrderList');
-      list.innerHTML=orders.length?orders.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(/menunggu mitra|diproses/i.test(status)&&!(o.steps||[]).some(x=>/mitra menerima/i.test(x)))actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o.id)}">Terima</button><button class="reject" data-mitra-action="reject" data-id="${escapeHtml(o.id)}">Tolak</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o.id)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o.id)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o.id)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.address?.detail||o.place||'Alamat belum tersedia')}</p><p>💵 ${rupiah(o.total||0)} · ${escapeHtml(o.payment||'Tunai (COD)')}</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah dibuat pada perangkat ini.</p></div>';
+      const cards=[...incoming.map(o=>({...o,_incoming:true})),...cloudMitraOrders];
+      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o._key)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
       list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));
     }
-    function updateMitraOrder(id,action){const orders=getRealOrders(),o=orders.find(x=>x.id===id);if(!o)return;const map={accept:['Diterima','Mitra menerima pesanan'],prepare:['Disiapkan','Mitra mulai menyiapkan pesanan'],deliver:['Dalam perjalanan','Mitra mulai mengantar pesanan'],complete:['Selesai','Pesanan berhasil diselesaikan'],reject:['Ditolak','Mitra menolak pesanan']};const next=map[action];if(!next)return;if(action==='reject'&&!confirm('Yakin ingin menolak pesanan ini?'))return;o.status=next[0];o.note=next[1]+'.';o.steps=Array.isArray(o.steps)?o.steps:[];o.steps.push(next[1]);saveRealOrders(orders);renderMitraDashboard();renderProfile();showToast('Status pesanan diperbarui: '+next[0]);}
+    async function updateMitraOrder(key,action){
+      if(!firebaseDb||!currentFirebaseUser)return;const boardRef=firebaseDb.ref('orderBoard/'+key);
+      try{
+        if(action==='accept'){
+          const result=await boardRef.transaction(current=>{if(!current||current.mitraUid||current.status!=='Menunggu mitra')return;current.mitraUid=currentFirebaseUser.uid;current.status='Diterima';return current;});
+          if(!result.committed){showToast('Pesanan sudah diambil Mitra lain.');return;}
+          const privateRef=firebaseDb.ref('orders/'+key);const privateSnap=await privateRef.once('value');const privateOrder=privateSnap.val();if(!privateOrder)throw new Error('Data pesanan tidak ditemukan.');const steps=Array.isArray(privateOrder.steps)?privateOrder.steps:[];steps.push('Mitra menerima pesanan');const changes={mitraUid:currentFirebaseUser.uid,status:'Diterima',note:'Mitra menerima pesanan.',updatedAt:firebase.database.ServerValue.TIMESTAMP,steps};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+privateOrder.buyerUid+'/'+key).update(changes);
+        }else{
+          const map={prepare:['Disiapkan','Mitra mulai menyiapkan pesanan'],deliver:['Dalam perjalanan','Mitra mulai mengantar pesanan'],complete:['Selesai','Pesanan berhasil diselesaikan']};const next=map[action];if(!next)return;
+          const privateRef=firebaseDb.ref('orders/'+key);const snap=await privateRef.once('value');const order=snap.val();if(!order||order.mitraUid!==currentFirebaseUser.uid){showToast('Pesanan ini bukan tanggung jawab akunmu.');return;}
+          const steps=Array.isArray(order.steps)?order.steps:[];steps.push(next[1]);const changes={status:next[0],note:next[1]+'.',steps,updatedAt:firebase.database.ServerValue.TIMESTAMP};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+order.buyerUid+'/'+key).update(changes);await boardRef.update({status:next[0]});
+        }
+        showToast(action==='accept'?'Pesanan berhasil diambil. Detail alamat tersedia di pesananmu.':'Status pesanan diperbarui.');
+      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast('Perubahan gagal. Periksa Firebase Security Rules v2.0.');}
+    }
     document.getElementById('switchBuyer').addEventListener('click',async()=>{
       const button=document.getElementById('switchBuyer'); button.disabled=true;
       try { await saveCloudRole('Pembeli'); localStorage.setItem(ROLE_KEY,'Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif dan tersimpan.'); }
@@ -1093,7 +1140,7 @@
       document.getElementById('profileDisplayName').textContent = data.name || 'Pengguna Titipuuy';
       document.getElementById('profileDisplayPhone').textContent = data.phone || 'Belum ada nomor telepon';
       document.getElementById('profileAvatar').textContent = (data.name || 'N').trim().charAt(0).toUpperCase();
-      const orders = (() => { try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '[]'); } catch { return []; } })();
+      const orders = allBuyerOrders();
       document.getElementById('profileTotalOrders').textContent = orders.length;
       document.getElementById('profileActiveOrders').textContent = orders.filter(o => !/selesai|dibatalkan/i.test(o.status || '')).length;
       document.getElementById('profileCompletedOrders').textContent = orders.filter(o => /selesai/i.test(o.status || '')).length;
@@ -1211,5 +1258,6 @@
       document.getElementById('emptyState').style.display = visible ? 'none' : 'block';
     }
   </script>
+<!-- Firebase Rules v2.0 disertakan dalam catatan rilis; jangan membuka orders ke semua pengguna. -->
 </body>
 </html>
