@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Nitipuuy v2.3.1 — Mode Mitra Terverifikasi</title>
+  <title>Nitipuuy v2.4 — Mode Mitra Terverifikasi</title>
   <style>
     :root {
       --orange: #f98413;
@@ -1301,6 +1301,70 @@
       const fields=`<label>Label alamat<input name="label" required maxlength="30" value="${escapeHtml(old.label||'')}" placeholder="Rumah, Kantor, Kos"></label><label>Nama penerima<input name="name" required maxlength="60" value="${escapeHtml(old.name||'')}"></label><label>Nomor telepon<input name="phone" required inputmode="tel" maxlength="20" value="${escapeHtml(old.phone||'')}"></label><label>Alamat lengkap<textarea name="detail" required maxlength="300" placeholder="Jalan, nomor rumah, RT/RW, desa/kelurahan, kecamatan">${escapeHtml(old.detail||'')}</textarea></label><label>Patokan / catatan<input name="note" maxlength="120" value="${escapeHtml(old.note||'')}" placeholder="Dekat masjid, pagar hitam..."></label><label class="profile-choice"><input type="checkbox" name="isDefault" ${old.isDefault||!list.length?'checked':''}> Jadikan alamat utama</label>`;
       openProfileForm(index===null?'Tambah alamat':'Edit alamat',fields,old,fd=>{const item=Object.fromEntries(fd.entries());item.isDefault=fd.get('isDefault')==='on';if(!item.label.trim()||!item.name.trim()||!item.phone.trim()||!item.detail.trim()){showToast('Lengkapi label, penerima, telepon, dan alamat.');return false;}let next=getAddresses();if(item.isDefault)next=next.map(a=>({...a,isDefault:false}));if(index===null)next.push(item);else next[index]=item;if(!next.some(a=>a.isDefault)&&next.length)next[0].isDefault=true;try{saveAddresses(next);}catch{showToast('Gagal menyimpan alamat.');return false;}showToast('Alamat berhasil disimpan.');return true;});
     }
+    function openSecureMitraApplication() {
+      if (!currentFirebaseUser) { showToast('Silakan login terlebih dahulu.'); return; }
+      const profile = getProfile();
+      const form = openProfileForm('Daftar Menjadi Mitra', `
+        <div class="role-intro">Lengkapi identitas dan dokumen untuk proses verifikasi Mitra Nitipuuy.</div>
+        <label>Nama lengkap<input name="fullName" required minlength="3" maxlength="100" value="${escapeHtml(profile.name || currentFirebaseUser.displayName || '')}"></label>
+        <label>NIK (16 digit)<input name="nik" required inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" autocomplete="off" placeholder="Masukkan 16 digit NIK"></label>
+        <label>Nomor WhatsApp<input name="phone" required minlength="8" maxlength="20" inputmode="tel" value="${escapeHtml(profile.phone || '')}" placeholder="08xxxxxxxxxx"></label>
+        <label>Alamat lengkap<textarea name="address" required minlength="5" maxlength="300" placeholder="Alamat domisili lengkap"></textarea></label>
+        <label>Jenis kendaraan<select name="vehicleType" required><option value="">Pilih kendaraan</option><option value="Motor">Motor</option><option value="Mobil">Mobil</option></select></label>
+        <label>Nomor kendaraan<input name="vehicleNumber" required minlength="3" maxlength="20" placeholder="Contoh: T1234AB"></label>
+        <label>Foto KTP (JPEG/PNG, maksimal 5 MB)<input id="mitraKtpFile" name="ktp" type="file" accept="image/jpeg,image/png" required></label>
+        <div id="mitraKtpPreview" class="profile-hint" aria-live="polite">Pratinjau foto KTP akan muncul di sini.</div>
+        <label class="profile-choice" style="align-items:flex-start"><input name="privacyConsent" type="checkbox" value="true" required><span>Saya menyetujui pemrosesan NIK dan foto KTP untuk verifikasi pendaftaran Mitra. Dokumen disimpan secara privat dan hanya dapat diakses Admin berwenang.</span></label>
+        <div class="profile-hint">Pengujian: gunakan dokumen dummy. Jangan unggah KTP asli sebelum seluruh proses akses, retensi, dan penghapusan dokumen selesai diuji.</div>
+      `, {}, async (fd, formEl) => {
+        const fullName = String(fd.get('fullName') || '').trim();
+        const nik = String(fd.get('nik') || '').replace(/\s/g, '');
+        const phone = String(fd.get('phone') || '').trim();
+        const address = String(fd.get('address') || '').trim();
+        const vehicleType = String(fd.get('vehicleType') || '').trim();
+        const vehicleNumber = String(fd.get('vehicleNumber') || '').trim().toUpperCase();
+        const ktp = fd.get('ktp');
+        if (fullName.length < 3 || !/^\d{16}$/.test(nik)) throw new Error('Nama wajib diisi dan NIK harus tepat 16 digit.');
+        if (!/^[0-9+() .-]{8,20}$/.test(phone)) throw new Error('Format nomor WhatsApp tidak valid.');
+        if (address.length < 5 || !vehicleType || vehicleNumber.length < 3) throw new Error('Lengkapi alamat dan data kendaraan.');
+        if (!(ktp instanceof File) || !ktp.size || ktp.size > 5 * 1024 * 1024) throw new Error('Pilih foto KTP maksimal 5 MB.');
+        if (!['image/jpeg', 'image/png'].includes(ktp.type)) throw new Error('Foto KTP harus JPEG atau PNG.');
+        if (fd.get('privacyConsent') !== 'true') throw new Error('Persetujuan pemrosesan data wajib dicentang.');
+        const body = new FormData();
+        body.append('fullName', fullName); body.append('nik', nik); body.append('phone', phone);
+        body.append('address', address); body.append('vehicleType', vehicleType);
+        body.append('vehicleNumber', vehicleNumber); body.append('ktp', ktp, ktp.name);
+        body.append('privacyConsent', 'true');
+        const token = await currentFirebaseUser.getIdToken(true);
+        const response = await fetch(`${NITIPUUY_API}/mitra/apply-secure`, {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` }, body
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.success !== true) throw new Error(result.error || `Pengajuan gagal (HTTP ${response.status}).`);
+        showToast('Pengajuan Mitra berhasil dikirim dan menunggu pemeriksaan Admin.');
+        return true;
+      });
+      const fileInput = form.querySelector('#mitraKtpFile');
+      const preview = form.querySelector('#mitraKtpPreview');
+      let previewUrl = null;
+      fileInput?.addEventListener('change', () => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) { preview.textContent = 'Pratinjau foto KTP akan muncul di sini.'; return; }
+        if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+          fileInput.value = ''; preview.textContent = 'File tidak valid. Gunakan JPEG/PNG maksimal 5 MB.'; return;
+        }
+        preview.replaceChildren();
+        const label = document.createElement('div'); label.textContent = 'Pratinjau dokumen:';
+        const img = document.createElement('img'); previewUrl = URL.createObjectURL(file);
+        img.src = previewUrl; img.alt = 'Pratinjau dokumen KTP';
+        img.style.cssText = 'display:block;max-width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-top:8px';
+        preview.append(label, img);
+      });
+      form.querySelector('#profileCancel')?.addEventListener('click', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); });
+    }
+
     async function openAccountMode() {
       if(!currentFirebaseUser){showToast('Silakan login terlebih dahulu.');return;}
       try {
@@ -1324,19 +1388,7 @@
           showModal('Pengajuan Mitra ditolak','Pengajuan kamu belum disetujui. Silakan hubungi Admin Nitipuuy untuk mengetahui alasannya dan langkah pengajuan kembali.');
           return;
         }
-        openProfileForm('Daftar Menjadi Mitra',
-          `<div class="role-intro">Bergabung menjadi Mitra Nitipuuy dan bantu mengantar kebutuhan pelanggan.</div>
-           <label>Nama lengkap<input name="fullName" required minlength="3" maxlength="100" value="${escapeHtml(getProfile().name||currentFirebaseUser.displayName||'')}"></label>
-           <label>Nomor telepon<input name="phone" required minlength="8" maxlength="20" inputmode="tel" value="${escapeHtml(getProfile().phone||'')}"></label>
-           <label>Jenis kendaraan<input name="vehicleType" required minlength="2" maxlength="50" placeholder="Motor atau Mobil"></label>
-           <label>Nomor kendaraan<input name="vehicleNumber" required minlength="3" maxlength="20" placeholder="Contoh: T1234AB"></label>
-           <label>Alamat lengkap<textarea name="address" required minlength="5" maxlength="300" placeholder="Alamat domisili kamu"></textarea></label>
-           <div class="profile-hint">Pengajuan akan berstatus Menunggu. Kamu belum bisa menggunakan Dashboard Mitra sebelum disetujui Admin.</div>`,{},async fd=>{
-            const payload={fullName:String(fd.get('fullName')||'').trim(),phone:String(fd.get('phone')||'').trim(),vehicleType:String(fd.get('vehicleType')||'').trim(),vehicleNumber:String(fd.get('vehicleNumber')||'').trim(),address:String(fd.get('address')||'').trim()};
-            await callNitipuuyApi('/mitra/apply',{method:'POST',body:JSON.stringify(payload)});
-            showToast('Pengajuan Mitra berhasil dikirim. Menunggu persetujuan Admin.');
-            return true;
-          });
+        openSecureMitraApplication();
       } catch(error) {
         console.error('Pemeriksaan status Mitra gagal:',error);
         showModal('Status Mitra belum dapat diperiksa',error.message+' Pastikan Worker sudah memiliki endpoint GET /mitra/status. Mode Pembeli tetap dapat digunakan.');
@@ -1347,7 +1399,7 @@
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Titipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.3.1 · Firebase Authentication, pesanan realtime, chat per pesanan, kirim foto terkompresi, dan status Mitra melalui Worker.'); }
+    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.4 · Firebase Authentication, pesanan realtime, chat per pesanan, kirim foto terkompresi, dan status Mitra melalui Worker.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
