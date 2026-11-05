@@ -211,9 +211,13 @@
       opacity: 0; pointer-events: none; transition: .25s; text-align: center;
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
-    .modal-backdrop { position: fixed; z-index: 50; inset: 0; display: none; place-items: center; padding: 20px; background: rgba(49,24,12,.42); backdrop-filter: blur(5px); }
-    .modal-backdrop.show { display: grid; }
-    .modal { width: min(100%, 420px); padding: 24px; border-radius: 24px; background: var(--cream); box-shadow: 0 25px 70px rgba(40,20,10,.25); animation: pop .22s ease-out; }
+    /* v2.4.1: modal panjang (formulir Mitra) dapat discroll di desktop maupun mobile */
+    .modal-backdrop { position: fixed; z-index: 50; inset: 0; display: none; align-items: center; justify-content: center; overflow-y: auto; overscroll-behavior: contain; padding: 20px; background: rgba(49,24,12,.42); backdrop-filter: blur(5px); }
+    .modal-backdrop.show { display: flex; }
+    .modal { width: min(100%, 560px); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); margin: auto; padding: 24px; border-radius: 24px; background: var(--cream); box-shadow: 0 25px 70px rgba(40,20,10,.25); animation: pop .22s ease-out; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .modal .profile-form { padding-bottom: 2px; }
+    .modal .profile-form .modal-actions { position: sticky; bottom: -2px; z-index: 2; padding: 12px 0 2px; background: var(--cream); }
+    @media(max-width:520px){ .modal-backdrop { padding: 10px; align-items: flex-start; } .modal { width: 100%; max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); padding: 20px; border-radius: 20px; } }
     .modal h2 { margin: 0 0 7px; }
     .modal p { margin: 0 0 18px; color: var(--brown-soft); line-height: 1.5; font-size: .9rem; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 9px; }
@@ -1399,7 +1403,7 @@
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Titipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.4 · Firebase Authentication, pesanan realtime, chat per pesanan, kirim foto terkompresi, dan status Mitra melalui Worker.'); }
+    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.4.1 · Firebase Authentication, pesanan realtime, chat per pesanan, kirim foto terkompresi, dan status Mitra melalui Worker.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
