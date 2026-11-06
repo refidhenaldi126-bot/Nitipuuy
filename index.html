@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v2.0 — Realtime Order System</title>
+  <title>Titipuuy v0.8.1 — Mitra Dashboard UX Fix</title>
   <style>
     :root {
       --orange: #f98413;
@@ -205,15 +205,20 @@
     @media(max-width:520px){.cart-fab{right:14px;bottom:100px}.checkout-backdrop{padding:0}.checkout-panel{max-height:94vh;border-radius:24px 24px 0 0;padding:19px}}
 
     .toast {
-      position: fixed; z-index: 40; left: 50%; bottom: 100px; transform: translate(-50%, 15px);
+      position: fixed; z-index: 100; left: 50%; bottom: 100px; transform: translate(-50%, 15px);
       max-width: calc(100% - 32px); padding: 12px 17px; border-radius: 14px;
       color: white; background: var(--brown); box-shadow: var(--shadow); font-size: .84rem;
       opacity: 0; pointer-events: none; transition: .25s; text-align: center;
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
-    .modal-backdrop { position: fixed; z-index: 50; inset: 0; display: none; place-items: center; padding: 20px; background: rgba(49,24,12,.42); backdrop-filter: blur(5px); }
-    .modal-backdrop.show { display: grid; }
-    .modal { width: min(100%, 420px); padding: 24px; border-radius: 24px; background: var(--cream); box-shadow: 0 25px 70px rgba(40,20,10,.25); animation: pop .22s ease-out; }
+    /* v2.4.1: modal panjang (formulir Mitra) dapat discroll di desktop maupun mobile */
+    .modal-backdrop { position: fixed; z-index: 50; inset: 0; display: none; align-items: center; justify-content: center; overflow-y: auto; overscroll-behavior: contain; padding: 20px; background: rgba(49,24,12,.42); backdrop-filter: blur(5px); }
+    .modal-backdrop.show { display: flex; }
+    .modal { width: min(100%, 560px); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); margin: auto; padding: 24px; border-radius: 24px; background: var(--cream); box-shadow: 0 25px 70px rgba(40,20,10,.25); animation: pop .22s ease-out; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .modal.form-active > .modal-actions { display: none; }
+    .modal .profile-form { padding-bottom: 2px; }
+    .modal .profile-form .modal-actions { position: sticky; bottom: -2px; z-index: 2; padding: 12px 0 2px; background: var(--cream); }
+    @media(max-width:520px){ .modal-backdrop { padding: 10px; align-items: flex-start; } .modal { width: 100%; max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); padding: 20px; border-radius: 20px; } }
     .modal h2 { margin: 0 0 7px; }
     .modal p { margin: 0 0 18px; color: var(--brown-soft); line-height: 1.5; font-size: .9rem; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 9px; }
@@ -286,7 +291,7 @@
     @media(max-width:520px){.page-banner{padding:21px}.order-card{padding:14px}.order-main{padding:13px 0}}
 
 
-    .mitra-page{display:none}.mitra-page.active{display:block;animation:pop .25s ease-out}.mitra-hero{padding:22px;border-radius:22px;background:linear-gradient(135deg,#f98413,#e96c08);color:#fff;margin-bottom:16px}.mitra-hero h1{margin:5px 0;font-size:1.5rem}.mitra-hero p{margin:0;color:#fff2df;font-size:.85rem}.mitra-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}.mitra-stat{background:#fff;padding:13px 8px;border-radius:15px;text-align:center;box-shadow:var(--shadow-small)}.mitra-stat b{display:block;color:var(--orange-dark);font-size:1.2rem}.mitra-stat small{font-size:.68rem;color:var(--muted);font-weight:700}.mitra-toggle{width:100%;padding:13px;border:0;border-radius:13px;background:#fff;color:var(--orange-dark);font-weight:900;margin-top:13px}.mitra-order-card{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:17px;padding:15px;margin:10px 0;box-shadow:var(--shadow-small)}.mitra-order-head{display:flex;justify-content:space-between;gap:8px;font-size:.75rem;color:var(--muted)}.mitra-order-card h3{margin:10px 0 5px;font-size:1rem}.mitra-order-card p{margin:4px 0;color:var(--brown-soft);font-size:.8rem;line-height:1.5}.mitra-order-actions{display:flex;gap:8px;margin-top:12px}.mitra-order-actions button{flex:1;border:0;border-radius:11px;padding:11px 8px;font-weight:850;background:var(--orange);color:#fff}.mitra-order-actions .reject{background:#fff0ed;color:#bd4438}.mitra-empty{padding:24px;text-align:center;background:#fff;border-radius:16px;color:var(--muted)}
+    .mitra-page{display:none}.mitra-page.active{display:block;animation:pop .25s ease-out}.mitra-hero{padding:18px 20px;border-radius:22px;background:linear-gradient(135deg,#f98413,#e96c08);color:#fff;margin-bottom:16px}.mitra-hero-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.mitra-hero-head>div{min-width:0}.mitra-switch{position:relative;flex:0 0 66px;width:66px;height:36px;margin-top:3px;border:1px solid rgba(255,255,255,.45);border-radius:999px;background:rgba(70,45,30,.32);box-shadow:inset 0 2px 7px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;transition:background .25s,box-shadow .25s}.mitra-switch::before{content:"";position:absolute;left:7px;top:50%;width:7px;height:7px;border-radius:50%;background:#ff7777;box-shadow:0 0 8px 2px rgba(255,65,65,.85);transform:translateY(-50%);transition:all .25s}.mitra-switch-knob{position:absolute;left:4px;top:3px;width:28px;height:28px;border-radius:50%;background:linear-gradient(145deg,#fff,#e9e9e9);box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .25s}.mitra-switch.is-online{background:rgba(16,185,95,.28);box-shadow:inset 0 2px 7px rgba(0,0,0,.15),0 0 14px rgba(52,255,153,.5);border-color:rgba(170,255,211,.9)}.mitra-switch.is-online::before{left:auto;right:7px;background:#6affad;box-shadow:0 0 9px 3px rgba(45,255,145,.9)}.mitra-switch.is-online .mitra-switch-knob{transform:translateX(30px)}.mitra-switch:disabled{opacity:.55;cursor:not-allowed}.mitra-hero .mitra-toggle{width:auto;max-width:100%;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.94);font-size:.76rem;margin-top:13px}.mitra-toggle[hidden]{display:none!important}.mitra-hero h1{margin:5px 0;font-size:1.5rem}.mitra-hero p{margin:0;color:#fff2df;font-size:.85rem}.mitra-presence{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:17px;padding:15px;margin:12px 0;box-shadow:var(--shadow-small)}.mitra-presence-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.mitra-presence-label{font-weight:900;color:var(--brown)}.mitra-presence-state{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#f1eee9;color:#78685d;font-size:.75rem;font-weight:900}.mitra-presence-state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}.mitra-presence-state.online{background:#e8f8ee;color:#16834b}.mitra-presence-state.offline{background:#f1eee9;color:#78685d}.mitra-presence-state.busy{background:#fff3df;color:#bd6a00}.mitra-presence p{font-size:.78rem;color:var(--muted);margin:9px 0 12px;line-height:1.45}.mitra-presence-note{font-size:.7rem!important;margin:9px 0 0!important}.mitra-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}.mitra-stat{background:#fff;padding:13px 8px;border-radius:15px;text-align:center;box-shadow:var(--shadow-small)}.mitra-stat b{display:block;color:var(--orange-dark);font-size:1.2rem}.mitra-stat small{font-size:.68rem;color:var(--muted);font-weight:700}.mitra-toggle{width:100%;padding:13px;border:0;border-radius:13px;background:#fff;color:var(--orange-dark);font-weight:900;margin-top:13px}.mitra-order-card{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:17px;padding:15px;margin:10px 0;box-shadow:var(--shadow-small)}.mitra-order-head{display:flex;justify-content:space-between;gap:8px;font-size:.75rem;color:var(--muted)}.mitra-order-card h3{margin:10px 0 5px;font-size:1rem}.mitra-order-card p{margin:4px 0;color:var(--brown-soft);font-size:.8rem;line-height:1.5}.mitra-order-actions{display:flex;gap:8px;margin-top:12px}.mitra-order-actions button{flex:1;border:0;border-radius:11px;padding:11px 8px;font-weight:850;background:var(--orange);color:#fff}.mitra-order-actions .reject{background:#fff0ed;color:#bd4438}.mitra-empty{padding:24px;text-align:center;background:#fff;border-radius:16px;color:var(--muted)}
 
     .profile-page { display: none; }
     .profile-page.active { display: block; animation: pop .25s ease-out; }
@@ -432,7 +437,100 @@
     .role-choice span{display:grid;gap:4px}.role-choice b{font-size:.95rem}.role-choice small{color:var(--muted);font-size:.78rem;line-height:1.45}
     .profile-note{border-radius:16px}
     .profile-form button:disabled{opacity:.6;cursor:wait}
-  </style>
+
+    /* Titipuuy v2.2 — ruang chat per pesanan */
+    .chat-backdrop{position:fixed;inset:0;z-index:1200;background:rgba(45,24,13,.48);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:14px}
+    .chat-backdrop.show{display:flex}
+    .chat-panel{width:min(100%,560px);height:min(88vh,760px);background:#fffaf4;border:1px solid rgba(255,255,255,.7);border-radius:24px;box-shadow:0 25px 80px rgba(50,24,8,.28);display:flex;flex-direction:column;overflow:hidden}
+    .chat-head{display:flex;align-items:center;gap:12px;padding:16px 18px;background:linear-gradient(120deg,#ff9c2b,#e96c08);color:white}
+    .chat-avatar{width:42px;height:42px;border-radius:15px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:1.25rem}
+    .chat-head-copy{min-width:0;flex:1}.chat-head-copy b{display:block}.chat-head-copy small{opacity:.9}.chat-close{width:38px;height:38px;border:0;border-radius:12px;background:rgba(255,255,255,.18);color:#fff;font-size:1.5rem}
+    .chat-order-strip{padding:9px 16px;background:#fff0dc;color:#80543e;font-size:.78rem;font-weight:750;border-bottom:1px solid #f4dfc9}
+    .chat-messages{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(circle at 10% 5%,rgba(249,132,19,.07),transparent 35%),#fffaf4}
+    .chat-empty{margin:auto;text-align:center;color:#a17b64;font-size:.9rem;line-height:1.6}
+    .chat-bubble{max-width:82%;padding:10px 12px;border-radius:17px;background:#fff;border:1px solid #f1e4d8;box-shadow:0 4px 12px rgba(80,45,20,.05);align-self:flex-start;overflow-wrap:anywhere}
+    .chat-bubble.mine{align-self:flex-end;background:#fff0dc;border-color:#f8d5aa;border-bottom-right-radius:5px}
+    .chat-bubble.theirs{border-bottom-left-radius:5px}.chat-bubble p{margin:0;white-space:pre-wrap;font-size:.9rem;line-height:1.45}.chat-time{display:block;text-align:right;color:#a17b64;font-size:.66rem;margin-top:5px}
+    .chat-photo{display:block;max-width:100%;max-height:260px;object-fit:cover;border-radius:11px;margin-bottom:6px;cursor:zoom-in}
+    .chat-compose{padding:12px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid #f1e4d8;background:#fff}
+    .chat-compose textarea{flex:1;resize:none;min-height:42px;max-height:110px;border:1px solid #ead8c7;border-radius:14px;padding:11px 12px;outline:none;color:#3b1b10;background:#fffaf4}
+    .chat-compose button{height:42px;min-width:44px;border:0;border-radius:13px;background:#f98413;color:white;font-weight:800}.chat-compose button:disabled{opacity:.5;cursor:not-allowed}
+    .chat-compose .chat-attach{background:#fff0dc;color:#a94f08;font-size:1.1rem}.chat-readonly{padding:12px;text-align:center;color:#98765e;background:#fff0dc;font-size:.82rem}
+    .chat-action-btn{border:0;border-radius:12px;padding:10px 13px;background:#fff0dc;color:#a94f08;font-weight:800;margin-top:10px}
+    @media(max-width:560px){.chat-backdrop{padding:0}.chat-panel{width:100%;height:100dvh;max-height:100dvh;border-radius:0}.chat-bubble{max-width:88%}}
+
+  
+/* v0.6.6.1 — status controls: green/red glass treatment */
+.mitra-presence-state.online{
+  background:rgba(34,197,94,.16);
+  color:#16834b;
+  border:1px solid rgba(22,163,74,.24);
+  box-shadow:0 0 0 1px rgba(34,197,94,.05),0 0 13px rgba(34,197,94,.18);
+}
+.mitra-presence-state.offline{
+  background:rgba(239,68,68,.13);
+  color:#dc2626;
+  border:1px solid rgba(220,38,38,.22);
+  box-shadow:0 0 0 1px rgba(239,68,68,.04),0 0 12px rgba(239,68,68,.14);
+}
+.mitra-presence-state.busy{
+  background:rgba(245,158,11,.16);
+  color:#b76a00;
+  border:1px solid rgba(217,119,6,.22);
+}
+.mitra-presence-actions .mitra-online-btn{
+  color:#08783f;
+  background:linear-gradient(135deg,rgba(74,222,128,.27),rgba(22,163,74,.12));
+  border:1px solid rgba(22,163,74,.42);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 5px 16px rgba(22,163,74,.12);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.mitra-presence-actions .mitra-offline-btn{
+  color:#b91c1c;
+  background:linear-gradient(135deg,rgba(248,113,113,.25),rgba(220,38,38,.11));
+  border:1px solid rgba(220,38,38,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 5px 16px rgba(220,38,38,.10);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.mitra-presence-actions .mitra-online-btn.is-active{
+  background:linear-gradient(135deg,rgba(74,222,128,.48),rgba(22,163,74,.25));
+  border-color:rgba(22,163,74,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 0 0 2px rgba(34,197,94,.10),0 0 20px rgba(34,197,94,.24);
+}
+.mitra-presence-actions .mitra-offline-btn.is-active{
+  background:linear-gradient(135deg,rgba(248,113,113,.43),rgba(220,38,38,.22));
+  border-color:rgba(220,38,38,.68);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 0 0 2px rgba(239,68,68,.09),0 0 18px rgba(220,38,38,.20);
+}
+.mitra-presence-actions button:disabled{
+  opacity:1;
+  cursor:default;
+  filter:saturate(.92);
+}
+@media(prefers-reduced-motion:no-preference){
+  .mitra-presence-actions button:not(:disabled):active{transform:translateY(1px) scale(.99)}
+}
+
+
+/* v0.8.1 — Mitra dashboard compact controls + hold-and-slide completion */
+.mitra-hero-head{align-items:flex-start}
+#mitraPresenceSwitch{display:block!important;visibility:visible!important;opacity:1!important;flex:0 0 66px;z-index:2}
+#switchBuyer.mitra-toggle{display:inline-flex!important;align-items:center;justify-content:center;width:auto;max-width:fit-content;padding:8px 13px;margin-top:12px;border-radius:999px;font-size:.78rem;line-height:1.2;min-height:36px;box-shadow:0 3px 10px rgba(75,35,12,.08)}
+#switchBuyer[hidden]{display:none!important}
+.mitra-complete-slider{--progress:0%;position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:54px;margin-top:12px;padding:0 54px;border:1px solid rgba(230,119,22,.22);border-radius:15px;background:linear-gradient(90deg,#fff0dc 0%,#fff8ef 100%);color:#a94f08;font-size:.82rem;font-weight:900;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+.mitra-complete-slider::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--progress);background:linear-gradient(90deg,rgba(249,132,19,.16),rgba(249,132,19,.30));pointer-events:none}
+.mitra-complete-slider .complete-thumb{position:absolute;left:5px;top:5px;bottom:5px;width:44px;border-radius:11px;background:linear-gradient(135deg,#f98413,#e96c08);color:white;display:grid;place-items:center;font-size:1.25rem;box-shadow:0 3px 9px rgba(150,73,10,.22);transform:translateX(var(--slide-x,0px));transition:transform .08s linear;z-index:1}
+.mitra-complete-slider .complete-label{position:relative;z-index:1;pointer-events:none;text-align:center}
+.mitra-complete-slider.is-holding .complete-label::after{content:" · tahan 3 detik";font-weight:700}
+.mitra-complete-slider.is-ready{background:#fff0dc;border-color:#f98413}
+.mitra-complete-slider.is-ready .complete-label::after{content:" · geser ke kanan";font-weight:800}
+.mitra-complete-slider.is-complete{opacity:.65;pointer-events:none}
+@media(prefers-reduced-motion:no-preference){.mitra-complete-slider{transition:background .2s,border-color .2s}.mitra-complete-slider .complete-thumb{transition:transform .08s linear}}
+</style>
 </head>
 <body>
 
@@ -622,8 +720,8 @@
     </section>
 
     <section class="mitra-page" id="mitraPage">
-      <div class="mitra-hero"><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p><button class="mitra-toggle" id="switchBuyer">← Kembali ke Mode Pembeli</button></div>
-      <div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
+      <div class="mitra-hero"><div class="mitra-hero-head"><div><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p></div><button type="button" class="mitra-switch" id="mitraPresenceSwitch" role="switch" aria-checked="false" aria-label="Ubah status operasional" title="Ubah status Online/Offline"><span class="mitra-switch-knob"></span></button></div><button class="mitra-toggle" id="switchBuyer" hidden>← Kembali ke Mode Pembeli</button></div>
+      <div class="mitra-presence" id="mitraPresenceCard"><div class="mitra-presence-top"><span class="mitra-presence-label">Status operasional</span><span class="mitra-presence-state offline" id="mitraPresenceBadge">Offline</span></div><p id="mitraPresenceDescription">Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.</p><p class="mitra-presence-note" id="mitraPresenceNote">Status disimpan secara aman melalui server.</p></div><div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
       <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersinkron melalui Firebase secara realtime</p></div></div><div id="mitraOrderList"></div>
     </section>
 
@@ -702,6 +800,16 @@
     </div>
   </div>
 
+
+  <div class="chat-backdrop" id="chatBackdrop" aria-hidden="true">
+    <section class="chat-panel" role="dialog" aria-modal="true" aria-label="Chat pesanan">
+      <header class="chat-head"><div class="chat-avatar">💬</div><div class="chat-head-copy"><b id="chatPartnerName">Chat pesanan</b><small id="chatPartnerRole">Pembeli ↔ Mitra</small></div><button class="chat-close" id="chatClose" aria-label="Tutup chat">×</button></header>
+      <div class="chat-order-strip" id="chatOrderStrip">Memuat detail pesanan…</div>
+      <div class="chat-messages" id="chatMessages"><div class="chat-empty">Memuat percakapan…</div></div>
+      <div id="chatComposerWrap" class="chat-compose"><button type="button" class="chat-attach" id="chatAttach" title="Kirim foto">＋</button><input type="file" id="chatPhotoInput" accept="image/*" hidden><textarea id="chatInput" rows="1" placeholder="Tulis pesan…" maxlength="1200"></textarea><button type="button" id="chatSend">Kirim</button></div>
+    </section>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
@@ -726,26 +834,6 @@
     let firebaseAuth = null;
     let firebaseDb = null;
     let currentFirebaseUser = null;
-    const TITIPUUY_API = 'https://nitipuuy-api.refidhenaldi126.workers.dev';
-    async function titipuuyApi(path, options = {}) {
-      if (!currentFirebaseUser) throw new Error('Sesi login berakhir. Silakan login kembali.');
-      const token = await currentFirebaseUser.getIdToken(true);
-      const response = await fetch(TITIPUUY_API + path, {
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          ...(options.headers || {})
-        }
-      });
-      const data = await response.json().catch(() => ({ success: false, error: 'Respons API tidak valid.' }));
-      if (!response.ok || data.success === false) {
-        const error = new Error(data.error || `Permintaan gagal (HTTP ${response.status}).`);
-        error.status = response.status;
-        throw error;
-      }
-      return data;
-    }
     let authIsRegister = false;
     const authGate = document.getElementById('authGate');
     const authError = document.getElementById('authError');
@@ -792,6 +880,7 @@
       const email=authEmail.value.trim(); const password=authPassword.value;
       setAuthBusy(true);
       try{
+        await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         if(authIsRegister) await firebaseAuth.createUserWithEmailAndPassword(email,password);
         else await firebaseAuth.signInWithEmailAndPassword(email,password);
       }catch(error){authMessage(friendlyAuthError(error));}
@@ -800,7 +889,12 @@
     googleButton.addEventListener('click',async()=>{
       clearAuthMessage(); if(!firebaseAuth){authMessage('Firebase belum siap. Muat ulang halaman.');return;}
       setAuthBusy(true);
-      try{const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});await firebaseAuth.signInWithPopup(provider);}
+      try{
+        await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const provider=new firebase.auth.GoogleAuthProvider();
+        // Jangan paksa pemilih akun setiap kali; Firebase akan memakai sesi login yang tersimpan.
+        await firebaseAuth.signInWithPopup(provider);
+      }
       catch(error){authMessage(friendlyAuthError(error));}
       finally{setAuthBusy(false);}
     });
@@ -845,9 +939,20 @@
             const profile={...existing,...(cloud.profile||{}),name:(cloud.profile&&cloud.profile.name)||existing.name||user.displayName||'',email:user.email||existing.email||''};
             localStorage.setItem('nitipuuy_profile',JSON.stringify(profile));
             updateWelcomeHeading({displayName:profile.name});
-            if(cloud.role) localStorage.setItem('nitipuuy_account_mode',cloud.role);
+            // Mode Mitra hanya boleh aktif jika endpoint status menyatakan approved.
+            // Jangan mempercayai users/{uid}/role saja karena aturan RTDB lama masih perlu diaudit.
+            try {
+              const token=await user.getIdToken(true);
+              const statusResponse=await fetch('https://nitipuuy-api.refidhenaldi126.workers.dev/mitra/status',{headers:{'Authorization':`Bearer ${token}`}});
+              const statusResult=await statusResponse.json();
+              const isApproved=statusResponse.ok && statusResult.success===true && statusResult.status==='approved' && statusResult.role==='Mitra';
+              localStorage.setItem('nitipuuy_account_mode',isApproved?'Mitra':'Pembeli');
+            } catch(roleError) {
+              console.warn('Status Mitra server tidak dapat dibaca; menggunakan Mode Pembeli:',roleError);
+              localStorage.setItem('nitipuuy_account_mode','Pembeli');
+            }
             if(!cloud.profile) await ref.child('profile').set({name:profile.name,email:profile.email,photoURL:user.photoURL||'',phone:profile.phone||'',updatedAt:firebase.database.ServerValue.TIMESTAMP});
-            if(!cloud.role) await ref.child('role').set(localStorage.getItem('nitipuuy_account_mode')||'Pembeli');
+            // Jangan pernah membuat atau mengubah role dari frontend.
             showToast('Profil berhasil disinkronkan.');
           }catch(error){
             console.warn('Sinkronisasi profil Firebase gagal:',error);
@@ -857,6 +962,7 @@
           if(typeof renderProfile==='function') renderProfile();
           startOrderListeners();
         }else{
+          localStorage.setItem('nitipuuy_account_mode','Pembeli');
           updateWelcomeHeading(null);
           authGate.hidden=false; removeAccountControls();
         }
@@ -1019,27 +1125,19 @@
         checkoutBody.innerHTML=`<div class="checkout-section"><h3>Ringkasan titipan</h3>${cart.map(x=>`<div class="checkout-row"><span>${x.emoji} ${escapeHtml(x.name)} × ${x.qty}</span><b>${rupiah(x.price*x.qty)}</b></div>`).join('')}<div class="checkout-row"><b>Subtotal menu</b><b>${rupiah(subtotal())}</b></div><div class="checkout-row"><span>Ongkos mitra</span><span class="checkout-muted">Dihitung / disepakati dengan mitra</span></div><div class="checkout-row"><b>Metode pembayaran</b><b>💵 ${escapeHtml(localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)')}</b></div></div><div class="checkout-section"><h3>📍 Alamat tujuan</h3><b>${escapeHtml(a.label)} — ${escapeHtml(a.name)}</b><p class="checkout-muted">${escapeHtml(a.phone)}<br>${escapeHtml(a.detail)}${a.note?'<br>'+escapeHtml(a.note):''}</p></div><div class="checkout-section checkout-muted">Total akhir dapat berubah setelah ongkos mitra disepakati. Prototipe ini belum memproses pembayaran sungguhan.</div><div class="checkout-actions"><button class="checkout-back" id="checkoutPrev">← Ubah alamat</button><button class="checkout-next" id="placeOrder">Buat pesanan</button></div>`;
         document.getElementById('checkoutPrev').onclick=()=>{checkoutStep=2;renderCheckout();};
         document.getElementById('placeOrder').onclick=async()=>{
-          if(!currentFirebaseUser||!firebaseDb){showToast('Silakan login kembali untuk membuat pesanan.');return;}
+          if(!currentFirebaseUser||!firebaseDb){showToast('Silakan login kembali untuk membuat pesanan cloud.');return;}
           const submit=document.getElementById('placeOrder');submit.disabled=true;submit.textContent='Mengirim pesanan…';
           try{
-            const result=await titipuuyApi('/orders',{
-              method:'POST',
-              body:JSON.stringify({
-                items:cart.map(x=>({name:x.name,place:x.place||'Pilihan menu',price:x.price,qty:x.qty,emoji:x.emoji||'🛍️'})),
-                address:a,
-                payment:localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)',
-                customerNote:checkoutNote
-              })
-            });
-            const order=result.order;
-            if(!order||!order.id||!order._key)throw new Error('Server tidak mengembalikan data pesanan yang lengkap.');
-            const saved=getRealOrders();saved.unshift(order);saveRealOrders(saved);
-            cart=[];checkoutNote='';persistCart();closeCheckout();
-            showToast('Pesanan '+order.id+' berhasil dibuat!');navigateTo('Pesanan');renderOrders();
-          }catch(error){
-            console.error('Gagal membuat pesanan melalui Titipuuy API:',error);
-            showToast(error.message||'Pesanan gagal dibuat. Periksa koneksi lalu coba lagi.');
-          }finally{submit.disabled=false;submit.textContent='Buat pesanan';}
+            const result=await callNitipuuyApi('/orders',{method:'POST',body:JSON.stringify({
+              items:cart.map(x=>({name:x.name,place:x.place,price:x.price,qty:x.qty,emoji:x.emoji})),
+              address:a,
+              payment:localStorage.getItem('nitipuuy_payment_method')||'Tunai (COD)',
+              customerNote:checkoutNote
+            })});
+            const order=result.order;const saved=getRealOrders();saved.unshift(order);saveRealOrders(saved);
+            cart=[];checkoutNote='';persistCart();closeCheckout();showToast('Pesanan '+order.id+' berhasil dibuat!');navigateTo('Pesanan');renderOrders();
+          }catch(error){console.error('Gagal membuat pesanan melalui Worker:',error);showToast(error.message||'Pesanan gagal dikirim. Periksa koneksi lalu coba lagi.');}
+          finally{submit.disabled=false;submit.textContent='Buat pesanan';}
         };
       }
     }
@@ -1059,12 +1157,13 @@
       const filtered = allOrders.filter(order => activeOrderFilter === 'Semua' || order.status === activeOrderFilter);
       list.innerHTML = filtered.length ? filtered.map(order => {
         const statusClass = order.status === 'Selesai' ? 'done' : '';
-        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button></div></article>`;
+        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button>${order.mitraUid && order._key ? `<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(order._key)}">💬 Chat Mitra</button>` : ''}</div></article>`;
       }).join('') : `<div class="orders-empty"><div class="empty-emoji">🛍️</div><strong>Belum ada pesanan ${activeOrderFilter.toLowerCase()}</strong><p>Pesanan dengan status ini akan muncul di sini.</p></div>`;
       list.querySelectorAll('[data-order-detail]').forEach(button => button.addEventListener('click', () => {
         const order = allOrders.find(item => item.id === button.dataset.orderDetail);
         showModal(`Detail ${order.id}`, `${order.name}\n${order.place}\nStatus: ${order.status}\nTotal: ${rupiah(order.total)}\n\n${order.steps.map((step,index) => `${index+1}. ${step}`).join('\n')}\n\n${order.note}`);
       }));
+      list.querySelectorAll('[data-open-chat]').forEach(button=>button.addEventListener('click',()=>openOrderChat(button.dataset.openChat,'buyer')));
     }
     document.querySelectorAll('[data-order-filter]').forEach(button => button.addEventListener('click', () => {
       activeOrderFilter = button.dataset.orderFilter;
@@ -1075,61 +1174,193 @@
     function getRealOrders(){try{const v=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return [];}}
     function saveRealOrders(items){localStorage.setItem(ORDER_KEY,JSON.stringify(items));}
     function allBuyerOrders(){return cloudBuyerOrders.length?cloudBuyerOrders:getRealOrders();}
-    let orderRefreshTimer = null;
-    async function refreshOrderData(){
-      if(!currentFirebaseUser)return;
-      try{
-        const buyer=await titipuuyApi('/orders/mine');
-        cloudBuyerOrders=Array.isArray(buyer.orders)?buyer.orders:[];
-        saveRealOrders(cloudBuyerOrders);renderOrders();renderProfile();
-      }catch(error){console.warn('API riwayat pembeli:',error);}
-      if((localStorage.getItem(ROLE_KEY)||'Pembeli')==='Mitra'){
-        try{
-          const mitra=await titipuuyApi('/mitra/orders');
-          cloudBoardOrders=(mitra.orders||[]).filter(o=>!o.mitraUid);
-          cloudMitraOrders=(mitra.orders||[]).filter(o=>o.mitraUid===currentFirebaseUser.uid);
-          renderMitraDashboard();
-        }catch(error){console.warn('API papan Mitra:',error);showToast(error.message||'Gagal memuat pesanan Mitra.');}
-      }
-    }
     function startOrderListeners(){
-      if(!currentFirebaseUser||orderListenersStarted)return;
-      orderListenersStarted=true;
-      refreshOrderData();
-      if(orderRefreshTimer)clearInterval(orderRefreshTimer);
-      orderRefreshTimer=setInterval(refreshOrderData,10000);
+      if(!firebaseDb||!currentFirebaseUser||orderListenersStarted)return;orderListenersStarted=true;
+      firebaseDb.ref('ordersByBuyer/'+currentFirebaseUser.uid).on('value',snap=>{
+        cloudBuyerOrders=Object.entries(snap.val()||{}).map(([key,value])=>({...value,_key:key})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+        saveRealOrders(cloudBuyerOrders);renderOrders();renderProfile();
+      },err=>{console.warn('Listener pesanan pembeli:',err);showToast('Tidak dapat memuat pesanan pembeli. Periksa Rules Firebase.');});
+      firebaseDb.ref('orderBoard').on('value',snap=>{
+        cloudBoardOrders=Object.entries(snap.val()||{}).map(([key,value])=>({...value,_key:key})).filter(o=>!o.mitraUid||o.mitraUid===currentFirebaseUser.uid).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+        loadMitraPrivateOrders();
+      },err=>{console.warn('Listener papan pesanan:',err);showToast('Papan pesanan Mitra belum dapat diakses. Periksa Rules Firebase.');});
     }
-    function loadMitraPrivateOrders(){ refreshOrderData(); }
+    function loadMitraPrivateOrders(){
+      if(!firebaseDb||!currentFirebaseUser)return;
+      const mine=cloudBoardOrders.filter(o=>o.mitraUid===currentFirebaseUser.uid);
+      Promise.all(mine.map(async o=>{const snap=await firebaseDb.ref('orders/'+o._key).once('value');return snap.exists()?{...snap.val(),_key:o._key}:null;})).then(rows=>{
+        cloudMitraOrders=rows.filter(Boolean);renderMitraDashboard();
+      }).catch(err=>console.warn('Gagal membaca detail pesanan Mitra:',err));
+      renderMitraDashboard();
+    }
+    let mitraPresenceState='offline';
+    let mitraPresenceBusy=false;
+    function paintMitraPresence(state, busy=false){
+      mitraPresenceState=state==='online'?'online':'offline';mitraPresenceBusy=Boolean(busy);
+      const badge=document.getElementById('mitraPresenceBadge');
+      const desc=document.getElementById('mitraPresenceDescription');
+      const note=document.getElementById('mitraPresenceNote');
+      const toggle=document.getElementById('mitraPresenceSwitch');
+      const switchBuyer=document.getElementById('switchBuyer');
+      if(!badge||!desc||!toggle)return;
+      const shown=busy?'busy':mitraPresenceState;
+      badge.className='mitra-presence-state '+shown;
+      badge.textContent=busy?'Sibuk':(mitraPresenceState==='online'?'Online':'Offline');
+      desc.textContent=busy?'Kamu sedang menangani pesanan aktif. Status akan kembali tersedia setelah pesanan selesai.':(mitraPresenceState==='online'?'Kamu siap menerima pesanan baru selama aplikasi dan koneksi aktif.':'Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.');
+      toggle.classList.toggle('is-online',!busy&&mitraPresenceState==='online');
+      toggle.setAttribute('aria-checked',String(!busy&&mitraPresenceState==='online'));
+      toggle.setAttribute('aria-label',busy?'Status Sibuk':(mitraPresenceState==='online'?'Nonaktifkan status Online':'Aktifkan status Online'));
+      toggle.disabled=busy;
+      if(switchBuyer)switchBuyer.hidden=busy||mitraPresenceState!=='offline';
+      note.textContent=busy?'Status Offline tidak tersedia selama masih ada pesanan aktif.':'Status operasional tersimpan melalui server.';
+    }
+    async function refreshMitraPresence(){
+      if(localStorage.getItem(ROLE_KEY)!=='Mitra'||!currentFirebaseUser)return;
+      try{const data=await callNitipuuyApi('/mitra/availability',{method:'GET'});paintMitraPresence(data.state,data.busy);}
+      catch(error){console.warn('Status operasional Mitra gagal dimuat:',error);const note=document.getElementById('mitraPresenceNote');if(note)note.textContent='Status belum dapat dimuat dari server. Coba muat ulang.';}
+    }
+    async function setMitraPresence(state){
+      if(!['online','offline'].includes(state))return;
+      const toggle=document.getElementById('mitraPresenceSwitch');
+      if(toggle)toggle.disabled=true;
+      try{const data=await callNitipuuyApi('/mitra/availability',{method:'POST',body:JSON.stringify({state})});paintMitraPresence(data.state,data.busy);showToast(state==='online'?'Kamu sekarang Online dan siap menerima pesanan.':'Kamu sekarang Offline.');}
+      catch(error){showToast(error.message||'Status Mitra gagal diperbarui.');await refreshMitraPresence();}
+      finally{if(toggle)toggle.disabled=document.getElementById('mitraPresenceBadge')?.textContent==='Sibuk';}
+    }
+    document.getElementById('mitraPresenceSwitch')?.addEventListener('click',()=>{
+      if(mitraPresenceState==='online')setMitraPresence('offline');
+      else if(mitraPresenceState==='offline')setMitraPresence('online');
+    });
     function renderMitraDashboard(){
       const role=localStorage.getItem(ROLE_KEY)||'Pembeli';if(role!=='Mitra')return;
-      const incoming=cloudBoardOrders.filter(o=>!o.mitraUid&&o.status==='Menunggu mitra');
+      const presenceSwitch=document.getElementById('mitraPresenceSwitch');if(presenceSwitch){presenceSwitch.hidden=false;presenceSwitch.style.display='block';}
+      refreshMitraPresence();
+      const incoming=mitraPresenceState==='online'?cloudBoardOrders.filter(o=>!o.mitraUid&&o.status==='Menunggu mitra'):[];
       const active=cloudMitraOrders.filter(o=>/diterima|disiapkan|perjalanan/i.test(o.status||''));
       const done=cloudMitraOrders.filter(o=>/selesai/i.test(o.status||''));
       document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
       const list=document.getElementById('mitraOrderList');
       const cards=[...incoming.map(o=>({...o,_incoming:true})),...cloudMitraOrders];
-      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o._key)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p>${o.address?`<p>📍 ${escapeHtml(o.address.detail||'')}<br>☎ ${escapeHtml(o.address.phone||'')}</p>`:''}<div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan yang tersedia akan muncul di sini.</p></div>';
-      list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));
+      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<div class="mitra-complete-slider" role="button" tabindex="0" aria-label="Tahan 3 detik lalu geser ke kanan untuk menyelesaikan pesanan" data-complete-slider data-id="${escapeHtml(o._key)}"><span class="complete-thumb" aria-hidden="true">➜</span><span class="complete-label">Tahan 3 detik, lalu geser</span></div>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div>${!o._incoming?`<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(o._key)}">💬 Chat Pembeli</button>`:''}</article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
+      list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));list.querySelectorAll('[data-open-chat]').forEach(btn=>btn.addEventListener('click',()=>openOrderChat(btn.dataset.openChat,'mitra')));
+      bindCompleteSliders(list);
+    }
+    function bindCompleteSliders(root){
+      root.querySelectorAll('[data-complete-slider]').forEach(slider=>{
+        if(slider.dataset.bound==='1')return;slider.dataset.bound='1';
+        let holdTimer=null,holdReady=false,pointerId=null,startX=0,dragging=false;
+        const thumb=slider.querySelector('.complete-thumb');
+        const reset=()=>{clearTimeout(holdTimer);holdTimer=null;holdReady=false;dragging=false;slider.classList.remove('is-holding','is-ready');slider.style.setProperty('--slide-x','0px');slider.style.setProperty('--progress','0%');};
+        const maxTravel=()=>Math.max(0,slider.clientWidth-(thumb?.offsetWidth||44)-10);
+        const start=e=>{if(slider.classList.contains('is-complete'))return;e.preventDefault();pointerId=e.pointerId;startX=e.clientX;dragging=false;holdReady=false;slider.classList.add('is-holding');try{slider.setPointerCapture(pointerId);}catch{}holdTimer=setTimeout(()=>{holdReady=true;slider.classList.remove('is-holding');slider.classList.add('is-ready');},3000);};
+        const move=e=>{if(pointerId===null||e.pointerId!==pointerId)return;if(!holdReady)return;const dx=Math.max(0,Math.min(maxTravel(),e.clientX-startX));dragging=true;slider.style.setProperty('--slide-x',dx+'px');slider.style.setProperty('--progress',((dx/Math.max(1,maxTravel()))*100)+'%');if(dx>=maxTravel()*.94){const key=slider.dataset.id;slider.classList.add('is-complete');slider.querySelector('.complete-label').textContent='Menyelesaikan pesanan…';resetPointer();updateMitraOrder(key,'complete');}};
+        const resetPointer=()=>{pointerId=null;clearTimeout(holdTimer);holdTimer=null;};
+        const end=e=>{if(pointerId===null||(e&&e.pointerId!==pointerId))return;if(!holdReady){reset();pointerId=null;return;}reset();pointerId=null;};
+        slider.addEventListener('pointerdown',start);slider.addEventListener('pointermove',move);slider.addEventListener('pointerup',end);slider.addEventListener('pointercancel',end);slider.addEventListener('lostpointercapture',end);
+        slider.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showToast('Gunakan layar sentuh atau mouse: tahan 3 detik, lalu geser ke kanan.');}});
+      });
     }
     async function updateMitraOrder(key,action){
-      if(!currentFirebaseUser)return;
-      const button=document.querySelector(`[data-id="${CSS.escape(key)}"][data-mitra-action="${action}"]`);
-      if(button){button.disabled=true;button.textContent='Memproses…';}
+      if(!firebaseDb||!currentFirebaseUser)return;const boardRef=firebaseDb.ref('orderBoard/'+key);
       try{
-        if(action==='accept')await titipuuyApi(`/mitra/orders/${encodeURIComponent(key)}/claim`,{method:'POST',body:'{}'});
-        else{
-          const map={prepare:'Disiapkan',deliver:'Dalam perjalanan',complete:'Selesai'};
-          const status=map[action];if(!status)throw new Error('Aksi pesanan tidak dikenal.');
-          await titipuuyApi(`/mitra/orders/${encodeURIComponent(key)}/status`,{method:'POST',body:JSON.stringify({status})});
+        if(action==='accept'){
+          // Ambil buyerUid dari papan publik yang memang hanya berisi ringkasan pesanan.
+          const boardSnap=await boardRef.once('value');const boardBefore=boardSnap.val();
+          if(!boardBefore||!boardBefore.buyerUid)throw new Error('Ringkasan pesanan tidak ditemukan.');
+          // Transaksi atomik mencegah dua Mitra mengambil pesanan yang sama.
+          const result=await boardRef.transaction(current=>{if(!current||current.mitraUid||current.status!=='Menunggu mitra')return;current.mitraUid=currentFirebaseUser.uid;current.status='Diterima';return current;});
+          if(!result.committed){showToast('Pesanan sudah diambil Mitra lain.');return;}
+          // Tidak membaca data privat sebelum klaim: sesudah klaim, UID Mitra sudah tercatat.
+          const changes={mitraUid:currentFirebaseUser.uid,status:'Diterima',note:'Mitra menerima pesanan.',updatedAt:firebase.database.ServerValue.TIMESTAMP};
+          const privateRef=firebaseDb.ref('orders/'+key);
+          await privateRef.update(changes);
+          await firebaseDb.ref('ordersByBuyer/'+boardBefore.buyerUid+'/'+key).update(changes);
+        }else{
+          const map={prepare:['Disiapkan','Mitra mulai menyiapkan pesanan'],deliver:['Dalam perjalanan','Mitra mulai mengantar pesanan'],complete:['Selesai','Pesanan berhasil diselesaikan']};const next=map[action];if(!next)return;
+          const privateRef=firebaseDb.ref('orders/'+key);const snap=await privateRef.once('value');const order=snap.val();if(!order||order.mitraUid!==currentFirebaseUser.uid){showToast('Pesanan ini bukan tanggung jawab akunmu.');return;}
+          const steps=Array.isArray(order.steps)?order.steps:[];steps.push(next[1]);const changes={status:next[0],note:next[1]+'.',steps,updatedAt:firebase.database.ServerValue.TIMESTAMP};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+order.buyerUid+'/'+key).update(changes);await boardRef.update({status:next[0]});
         }
-        showToast(action==='accept'?'Pesanan berhasil diambil.':'Status pesanan diperbarui.');
-        await refreshOrderData();
-      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast(error.message||'Perubahan pesanan gagal.');if(button){button.disabled=false;}}
+        showToast(action==='accept'?'Pesanan berhasil diambil. Detail alamat tersedia di pesananmu.':'Status pesanan diperbarui.');
+      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast(error.code==='PERMISSION_DENIED'?'Firebase menolak perubahan. Periksa Rules v2.1.':(error.message||'Perubahan pesanan gagal.'));}
+    }
+    // CHAT PER PESANAN — pesan dan foto terkompresi disimpan pada Realtime Database.
+    // Foto dibatasi agar ukuran payload tetap kecil untuk prototipe. Untuk produksi,
+    // pindahkan media ke Firebase Storage dengan otorisasi peserta berbasis backend tepercaya.
+    const chatBackdrop=document.getElementById('chatBackdrop');
+    let activeChatKey=null, activeChatRole=null, activeChatOrder=null, chatListenerRef=null;
+    const chatMessagesEl=document.getElementById('chatMessages');
+    function closeOrderChat(){if(chatListenerRef){chatListenerRef.off('value',renderChatMessages);chatListenerRef=null;}activeChatKey=null;activeChatOrder=null;chatBackdrop.classList.remove('show');chatBackdrop.setAttribute('aria-hidden','true');}
+    document.getElementById('chatClose').addEventListener('click',closeOrderChat);
+    chatBackdrop.addEventListener('click',e=>{if(e.target===chatBackdrop)closeOrderChat();});
+    function chatTime(ts){try{return new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts||Date.now()));}catch{return '';}}
+    function renderChatMessages(snapshot){
+      const rows=Object.entries(snapshot.val()||{}).map(([id,m])=>({...m,_id:id})).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+      if(!rows.length){chatMessagesEl.innerHTML='<div class="chat-empty">Belum ada pesan.<br>Mulai percakapan dengan menyapa 👋</div>';return;}
+      chatMessagesEl.innerHTML=rows.map(m=>{const mine=m.senderUid===currentFirebaseUser.uid;const body=m.type==='image'?`<img class="chat-photo" src="${m.imageData}" alt="Foto dari ${mine?'Anda':'lawan bicara'}" loading="lazy">${m.caption?`<p>${escapeHtml(m.caption)}</p>`:''}`:`<p>${escapeHtml(m.text||'')}</p>`;return `<article class="chat-bubble ${mine?'mine':'theirs'}">${body}<small class="chat-time">${chatTime(m.timestamp)}</small></article>`;}).join('');
+      chatMessagesEl.querySelectorAll('.chat-photo').forEach(img=>img.addEventListener('click',()=>{const w=window.open();if(w){w.document.write(`<img src="${img.src}" style="max-width:100%;height:auto">`);w.document.title='Foto Titipuuy';}}));
+      chatMessagesEl.scrollTop=chatMessagesEl.scrollHeight;
+    }
+    async function openOrderChat(key,side){
+      if(!firebaseDb||!currentFirebaseUser){showToast('Silakan login untuk membuka chat.');return;}
+      try{
+        const path=side==='buyer'?'ordersByBuyer/'+currentFirebaseUser.uid+'/'+key:'orders/'+key;
+        const snap=await firebaseDb.ref(path).once('value');const order=snap.val();
+        if(!order)throw new Error('Pesanan tidak ditemukan atau akses belum diizinkan.');
+        if(!order.mitraUid||!order.buyerUid)throw new Error('Chat aktif setelah Mitra menerima pesanan.');
+        if(side==='buyer'&&order.buyerUid!==currentFirebaseUser.uid)throw new Error('Pesanan bukan milik akun ini.');
+        if(side==='mitra'&&order.mitraUid!==currentFirebaseUser.uid)throw new Error('Pesanan bukan tanggung jawab akun ini.');
+        activeChatKey=key;activeChatRole=side;activeChatOrder=order;
+        document.getElementById('chatPartnerName').textContent=side==='buyer'?'Chat dengan Mitra':'Chat dengan Pembeli';
+        document.getElementById('chatPartnerRole').textContent=side==='buyer'?'Mitra pesanan':'Pembeli pesanan';
+        document.getElementById('chatOrderStrip').textContent=`${order.id||key} · ${order.status||'Pesanan aktif'} · ${order.name||'Titipan'}`;
+        const readonly=order.status==='Selesai';document.getElementById('chatComposerWrap').style.display=readonly?'none':'flex';
+        let ro=document.getElementById('chatReadonly');if(readonly){if(!ro){ro=document.createElement('div');ro.id='chatReadonly';ro.className='chat-readonly';chatBackdrop.querySelector('.chat-panel').appendChild(ro);}ro.textContent='Pesanan selesai. Riwayat chat hanya dapat dibaca.';}else if(ro)ro.remove();
+        chatBackdrop.classList.add('show');chatBackdrop.setAttribute('aria-hidden','false');
+        if(chatListenerRef)chatListenerRef.off('value',renderChatMessages);
+        chatListenerRef=firebaseDb.ref('orderChats/'+key+'/messages');chatListenerRef.on('value',renderChatMessages,err=>{console.error('Chat listener:',err);showToast('Chat tidak dapat dimuat. Periksa Firebase Rules chat.');});
+      }catch(err){console.error('Buka chat gagal:',err);showToast(err.message||'Chat belum dapat dibuka.');}
+    }
+    async function sendChatMessage(payload){
+      if(!activeChatKey||!activeChatOrder||!currentFirebaseUser)throw new Error('Ruang chat belum aktif.');
+      if(activeChatOrder.status==='Selesai')throw new Error('Pesanan selesai; chat hanya dapat dibaca.');
+      const node={...payload,senderUid:currentFirebaseUser.uid,timestamp:firebase.database.ServerValue.TIMESTAMP};
+      await firebaseDb.ref('orderChats/'+activeChatKey+'/messages').push(node);
+    }
+    document.getElementById('chatSend').addEventListener('click',async()=>{const input=document.getElementById('chatInput');const value=input.value.trim();if(!value)return;const btn=document.getElementById('chatSend');btn.disabled=true;try{await sendChatMessage({type:'text',text:value});input.value='';}catch(err){console.error(err);showToast('Pesan gagal dikirim. Periksa Rules Firebase chat.');}finally{btn.disabled=false;input.focus();}});
+    document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('chatSend').click();}});
+    function compressChatImage(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/'))return reject(new Error('Pilih file gambar.'));if(file.size>8*1024*1024)return reject(new Error('Ukuran foto maksimal 8 MB.'));const reader=new FileReader();reader.onerror=()=>reject(new Error('Foto tidak dapat dibaca.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Format foto tidak didukung.'));img.onload=()=>{const scale=Math.min(1,900/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',.68);if(data.length>420000) return reject(new Error('Foto masih terlalu besar setelah kompresi. Pilih foto lain.'));resolve(data);};img.src=reader.result;};reader.readAsDataURL(file);});}
+    document.getElementById('chatAttach').addEventListener('click',()=>document.getElementById('chatPhotoInput').click());
+    document.getElementById('chatPhotoInput').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const btn=document.getElementById('chatAttach');btn.disabled=true;try{const imageData=await compressChatImage(file);const caption=prompt('Tambahkan keterangan foto (opsional):')||'';await sendChatMessage({type:'image',imageData,caption:caption.slice(0,180)});showToast('Foto berhasil dikirim.');}catch(err){console.error(err);showToast(err.message||'Foto gagal dikirim.');}finally{btn.disabled=false;e.target.value='';}});
+
+    // Mode Mitra tidak boleh ditinggalkan selama status operasional Online/Sibuk.
+    // Status dibaca dari Worker (server), bukan hanya mengandalkan tampilan/localStorage.
+    async function canMitraSwitchToBuyer(){
+      if(localStorage.getItem(ROLE_KEY)!=='Mitra')return true;
+      try{
+        const presence=await callNitipuuyApi('/mitra/availability',{method:'GET'});
+        paintMitraPresence(presence.state,presence.busy);
+        if(presence.busy){
+          showModal('Pesanan masih aktif','Kamu belum bisa beralih ke Mode Pembeli karena masih menangani pesanan. Selesaikan pesanan terlebih dahulu.');
+          return false;
+        }
+        if(presence.state==='online'){
+          showModal('Matikan status Online terlebih dahulu','Kamu sedang Online dan siap menerima pesanan. Ubah status menjadi Offline terlebih dahulu sebelum beralih ke Mode Pembeli.');
+          return false;
+        }
+        return true;
+      }catch(error){
+        console.error('Validasi status Mitra gagal:',error);
+        showModal('Status operasional belum dapat diperiksa','Demi keamanan, pergantian ke Mode Pembeli ditahan sampai status Online/Offline berhasil diverifikasi. Periksa koneksi lalu coba lagi.');
+        return false;
+      }
     }
     document.getElementById('switchBuyer').addEventListener('click',async()=>{
       const button=document.getElementById('switchBuyer'); button.disabled=true;
-      try { await saveCloudRole('Pembeli'); localStorage.setItem(ROLE_KEY,'Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif dan tersimpan.'); }
-      catch(error){ console.warn('Gagal mengganti role:',error); showToast('Mode tidak berubah karena gagal disimpan ke Firebase. Periksa koneksi dan Security Rules.'); }
+      try {
+        if(!await canMitraSwitchToBuyer())return;
+        localStorage.setItem(ROLE_KEY,'Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif.');
+      }
+      catch(error){ console.warn('Gagal mengganti role:',error); showToast('Mode tidak berubah. Silakan coba lagi.'); }
       finally { button.disabled=false; }
     });
     function renderActivity() {
@@ -1160,10 +1391,15 @@
         updatedAt:firebase.database.ServerValue.TIMESTAMP
       });
     }
-    async function saveCloudRole(role) {
-      if(!currentFirebaseUser || !firebaseDb) throw new Error('Sesi login tidak tersedia. Silakan masuk kembali.');
-      if(!['Pembeli','Mitra'].includes(role)) throw new Error('Role tidak valid.');
-      await firebaseDb.ref('users/'+currentFirebaseUser.uid+'/role').set(role);
+    // Role tidak boleh ditulis dari frontend. Perubahan role Mitra hanya melalui Worker setelah persetujuan Admin.
+    const NITIPUUY_API = 'https://nitipuuy-api.refidhenaldi126.workers.dev';
+    async function callNitipuuyApi(path, options={}) {
+      if(!currentFirebaseUser) throw new Error('Silakan login kembali.');
+      const token=await currentFirebaseUser.getIdToken(true);
+      const response=await fetch(NITIPUUY_API+path,{...options,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json',...(options.headers||{})}});
+      const data=await response.json().catch(()=>({success:false,error:'Respons server tidak valid.'}));
+      if(!response.ok || data.success===false) throw new Error(data.error||`Permintaan gagal (HTTP ${response.status}).`);
+      return data;
     }
     function getAddresses() {
       try { const value = JSON.parse(localStorage.getItem(ADDRESS_KEY) || '[]'); return Array.isArray(value) ? value : []; }
@@ -1192,8 +1428,9 @@
       const form = document.createElement('form'); form.className = 'profile-form';
       form.innerHTML = fields + '<div class="modal-actions"><button type="button" class="secondary-button" id="profileCancel">Batal</button><button type="submit" class="primary-button">Simpan</button></div>';
       modalText.replaceWith(form);
-      form.addEventListener('submit', async e => { e.preventDefault(); const submit=form.querySelector('[type=submit]'); const cancel=form.querySelector('#profileCancel'); submit.disabled=true; cancel.disabled=true; const oldLabel=submit.textContent; submit.textContent='Menyimpan…'; try { const result=await onSave(new FormData(form), form); if(result !== false){ form.replaceWith(modalText); modal.classList.remove('show'); renderProfile(); } } catch(error){ console.error(error); showToast(error.message || 'Perubahan gagal disimpan.'); } finally { if(form.isConnected){submit.disabled=false;cancel.disabled=false;submit.textContent=oldLabel;} } });
-      form.querySelector('#profileCancel').addEventListener('click', () => { form.replaceWith(modalText); modal.classList.remove('show'); });
+      modal.classList.add('form-active');
+      form.addEventListener('submit', async e => { e.preventDefault(); const submit=form.querySelector('[type=submit]'); const cancel=form.querySelector('#profileCancel'); submit.disabled=true; cancel.disabled=true; const oldLabel=submit.textContent; submit.textContent='Menyimpan…'; try { const result=await onSave(new FormData(form), form); if(result !== false){ form.replaceWith(modalText); modal.classList.remove('show','form-active'); renderProfile(); } } catch(error){ console.error(error); showToast(error.message || 'Perubahan gagal disimpan.'); } finally { if(form.isConnected){submit.disabled=false;cancel.disabled=false;submit.textContent=oldLabel;} } });
+      form.querySelector('#profileCancel').addEventListener('click', () => { form.replaceWith(modalText); modal.classList.remove('show','form-active'); });
       modal.classList.add('show');
       const first = form.querySelector('input,textarea,select'); if (first) first.focus();
       return form;
@@ -1215,7 +1452,7 @@
     }
     function openAddressBook() {
       const list = getAddresses();
-      modalTitle.textContent = 'Alamat tersimpan'; modalText.innerHTML = '';
+      modal.classList.remove('form-active'); modalTitle.textContent = 'Alamat tersimpan'; modalText.innerHTML = '';
       const wrap = document.createElement('div'); wrap.className = 'profile-address-book';
       const cards = list.length ? list.map((a,i)=>`<article class="profile-address-card"><b>${escapeHtml(a.label || 'Alamat')}</b><p>${escapeHtml(a.name || '')} · ${escapeHtml(a.phone || '')}<br>${escapeHtml(a.detail || '')}${a.note ? '<br>Patokan: '+escapeHtml(a.note):''}</p><div class="profile-inline-actions"><button type="button" data-default-address="${i}">Jadikan utama</button><button type="button" data-edit-address="${i}">Edit</button><button type="button" class="danger" data-delete-address="${i}">Hapus</button></div>${a.isDefault ? '<small>⭐ Alamat utama</small>':''}</article>`).join('') : '<div class="profile-hint">Belum ada alamat tersimpan. Tambahkan alamat rumah, kantor, atau lokasi favorit.</div>';
       wrap.innerHTML = `<div class="profile-address-list">${cards}</div><button type="button" class="primary-button" id="addProfileAddress">＋ Tambah alamat</button><div class="modal-actions"><button type="button" class="secondary-button" id="profileCancel">Tutup</button></div>`;
@@ -1232,31 +1469,149 @@
       const fields=`<label>Label alamat<input name="label" required maxlength="30" value="${escapeHtml(old.label||'')}" placeholder="Rumah, Kantor, Kos"></label><label>Nama penerima<input name="name" required maxlength="60" value="${escapeHtml(old.name||'')}"></label><label>Nomor telepon<input name="phone" required inputmode="tel" maxlength="20" value="${escapeHtml(old.phone||'')}"></label><label>Alamat lengkap<textarea name="detail" required maxlength="300" placeholder="Jalan, nomor rumah, RT/RW, desa/kelurahan, kecamatan">${escapeHtml(old.detail||'')}</textarea></label><label>Patokan / catatan<input name="note" maxlength="120" value="${escapeHtml(old.note||'')}" placeholder="Dekat masjid, pagar hitam..."></label><label class="profile-choice"><input type="checkbox" name="isDefault" ${old.isDefault||!list.length?'checked':''}> Jadikan alamat utama</label>`;
       openProfileForm(index===null?'Tambah alamat':'Edit alamat',fields,old,fd=>{const item=Object.fromEntries(fd.entries());item.isDefault=fd.get('isDefault')==='on';if(!item.label.trim()||!item.name.trim()||!item.phone.trim()||!item.detail.trim()){showToast('Lengkapi label, penerima, telepon, dan alamat.');return false;}let next=getAddresses();if(item.isDefault)next=next.map(a=>({...a,isDefault:false}));if(index===null)next.push(item);else next[index]=item;if(!next.some(a=>a.isDefault)&&next.length)next[0].isDefault=true;try{saveAddresses(next);}catch{showToast('Gagal menyimpan alamat.');return false;}showToast('Alamat berhasil disimpan.');return true;});
     }
-    function openAccountMode() {
-      const current=localStorage.getItem(ROLE_KEY)||'Pembeli';
-      openProfileForm('Pilih mode akun',
-        `<div class="role-intro">Satu akun Titipuuy dapat digunakan dalam dua peran. Pilih ruang kerja yang ingin kamu gunakan sekarang.</div>
-         <label class="profile-choice role-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}><span>🛍️ <b>Pembeli</b><small>Cari makanan, pilih layanan titip, buat pesanan, dan pantau status pesanan.</small></span></label>
-         <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mitra</b><small>Masuk ke ruang kerja mitra untuk melihat dan mengelola pesanan yang tersedia.</small></span></label>
-         <div class="profile-hint">Pilihan role disimpan ke Firebase pada akun kamu. Data profil tetap sama saat berganti mode.</div>`,{},
-        async fd=>{
-          const chosen=fd.get('role');
-          if(!['Pembeli','Mitra'].includes(chosen)){showToast('Pilih mode akun terlebih dahulu.');return false;}
-          if(!currentFirebaseUser || !firebaseDb){showToast('Kamu harus login untuk mengubah mode akun.');return false;}
-          if(chosen===current){showToast('Mode ini sudah aktif.');return true;}
-          await saveCloudRole(chosen);
-          localStorage.setItem(ROLE_KEY,chosen);
-          showToast(`Mode ${chosen} berhasil disimpan ke Firebase.`);
-          setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);
-          return true;
+    function openSecureMitraApplication() {
+      if (!currentFirebaseUser) { showToast('Silakan login terlebih dahulu.'); return; }
+      const profile = getProfile();
+      const form = openProfileForm('Daftar Menjadi Mitra', `
+        <div class="role-intro">Lengkapi identitas dan dokumen untuk proses verifikasi Mitra Nitipuuy.</div>
+        <label>Nama lengkap<input name="fullName" required minlength="3" maxlength="100" value="${escapeHtml(profile.name || currentFirebaseUser.displayName || '')}"></label>
+        <label>NIK (16 digit)<input name="nik" required inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" autocomplete="off" placeholder="Masukkan 16 digit NIK"></label>
+        <label>Nomor WhatsApp<input name="phone" required minlength="8" maxlength="20" inputmode="tel" value="${escapeHtml(profile.phone || '')}" placeholder="08xxxxxxxxxx"></label>
+        <label>Alamat lengkap<textarea name="address" required minlength="5" maxlength="300" placeholder="Alamat domisili lengkap"></textarea></label>
+        <label>Jenis kendaraan<select name="vehicleType" required><option value="">Pilih kendaraan</option><option value="Motor">Motor</option><option value="Mobil">Mobil</option></select></label>
+        <label>Nomor kendaraan<input name="vehicleNumber" required minlength="3" maxlength="20" placeholder="Contoh: T1234AB"></label>
+        <label>Foto KTP (JPEG/PNG, maksimal 5 MB)<input id="mitraKtpFile" name="ktp" type="file" accept="image/jpeg,image/png" required></label>
+        <div id="mitraKtpPreview" class="profile-hint" aria-live="polite">Pratinjau foto KTP akan muncul di sini.</div>
+        <label>Selfie sambil memegang KTP (JPEG/PNG, maksimal 5 MB)<input id="mitraSelfieFile" name="selfieKtp" type="file" accept="image/jpeg,image/png" required></label>
+        <div id="mitraSelfiePreview" class="profile-hint" aria-live="polite">Pratinjau selfie + KTP akan muncul di sini.</div>
+        <div id="mitraStnkGroup" class="hidden">
+          <label>Foto STNK motor (JPEG/PNG, maksimal 5 MB)<input id="mitraStnkFile" name="stnk" type="file" accept="image/jpeg,image/png"></label>
+          <div id="mitraStnkPreview" class="profile-hint" aria-live="polite">STNK wajib khusus Mitra yang menggunakan sepeda motor.</div>
+        </div>
+        <label class="profile-choice" style="align-items:flex-start"><input name="vehiclePermission" type="checkbox" value="true" required><span>Saya pemilik kendaraan atau memiliki izin dari pemilik untuk menggunakan kendaraan ini.</span></label>
+        <label class="profile-choice" style="align-items:flex-start"><input name="privacyConsent" type="checkbox" value="true" required><span>Saya menyetujui pemrosesan NIK, foto KTP, dan selfie dengan KTP. Foto STNK diproses jika saya mendaftar menggunakan sepeda motor. Dokumen disimpan secara privat dan hanya dapat diakses Admin berwenang sesuai kebijakan retensi.</span></label>
+        <div class="profile-hint">Gunakan dokumen dummy untuk pengujian. Jangan unggah dokumen asli sebelum akses Admin, retensi, dan penghapusan seluruh dokumen selesai diuji.</div>
+      `, {}, async (fd, formEl) => {
+        const fullName = String(fd.get('fullName') || '').trim();
+        const nik = String(fd.get('nik') || '').replace(/\s/g, '');
+        const phone = String(fd.get('phone') || '').trim();
+        const address = String(fd.get('address') || '').trim();
+        const vehicleType = String(fd.get('vehicleType') || '').trim();
+        const vehicleNumber = String(fd.get('vehicleNumber') || '').trim().toUpperCase();
+        const ktp = fd.get('ktp');
+        const selfieKtp = fd.get('selfieKtp');
+        const stnk = fd.get('stnk');
+        const requiresStnk = /^motor$/i.test(vehicleType);
+        if (fullName.length < 3 || !/^\d{16}$/.test(nik)) throw new Error('Nama wajib diisi dan NIK harus tepat 16 digit.');
+        if (!/^[0-9+() .-]{8,20}$/.test(phone)) throw new Error('Format nomor WhatsApp tidak valid.');
+        if (address.length < 5 || !vehicleType || vehicleNumber.length < 3) throw new Error('Lengkapi alamat dan data kendaraan.');
+        if (!(ktp instanceof File) || !ktp.size || ktp.size > 5 * 1024 * 1024) throw new Error('Pilih foto KTP maksimal 5 MB.');
+        if (!['image/jpeg', 'image/png'].includes(ktp.type)) throw new Error('Foto KTP harus JPEG atau PNG.');
+        if (!(selfieKtp instanceof File) || !selfieKtp.size || selfieKtp.size > 5 * 1024 * 1024) throw new Error('Pilih foto selfie + KTP maksimal 5 MB.');
+        if (!['image/jpeg', 'image/png'].includes(selfieKtp.type)) throw new Error('Foto selfie + KTP harus JPEG atau PNG.');
+        if (requiresStnk) {
+          if (!(stnk instanceof File) || !stnk.size || stnk.size > 5 * 1024 * 1024) throw new Error('Mitra motor wajib mengunggah foto STNK maksimal 5 MB.');
+          if (!['image/jpeg', 'image/png'].includes(stnk.type)) throw new Error('Foto STNK harus JPEG atau PNG.');
+        }
+        if (fd.get('vehiclePermission') !== 'true') throw new Error('Konfirmasi kepemilikan atau izin penggunaan kendaraan wajib dicentang.');
+        if (fd.get('privacyConsent') !== 'true') throw new Error('Persetujuan pemrosesan data wajib dicentang.');
+        const body = new FormData();
+        body.append('fullName', fullName); body.append('nik', nik); body.append('phone', phone);
+        body.append('address', address); body.append('vehicleType', vehicleType);
+        body.append('vehicleNumber', vehicleNumber); body.append('ktp', ktp, ktp.name);
+        body.append('selfieKtp', selfieKtp, selfieKtp.name); if (requiresStnk) body.append('stnk', stnk, stnk.name);
+        body.append('vehiclePermission', 'true'); body.append('privacyConsent', 'true');
+        const token = await currentFirebaseUser.getIdToken(true);
+        const response = await fetch(`${NITIPUUY_API}/mitra/apply-secure`, {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` }, body
         });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.success !== true) throw new Error(result.error || `Pengajuan gagal (HTTP ${response.status}).`);
+        showToast('Pengajuan Mitra berhasil dikirim dan menunggu pemeriksaan Admin.');
+        return true;
+      });
+      const vehicleSelect = form.querySelector('[name=vehicleType]');
+      const stnkGroup = form.querySelector('#mitraStnkGroup');
+      const stnkInput = form.querySelector('#mitraStnkFile');
+      const syncStnkRequirement = () => {
+        const required = /^motor$/i.test(vehicleSelect.value);
+        stnkGroup.classList.toggle('hidden', !required);
+        stnkInput.required = required;
+        if (!required) { stnkInput.value = ''; const preview = form.querySelector('#mitraStnkPreview'); preview.textContent = 'STNK tidak diperlukan untuk kendaraan nonmotor.'; }
+      };
+      vehicleSelect.addEventListener('change', syncStnkRequirement);
+      syncStnkRequirement();
+      const previewBindings = [
+        ['#mitraKtpFile', '#mitraKtpPreview', 'foto KTP'],
+        ['#mitraSelfieFile', '#mitraSelfiePreview', 'selfie + KTP'],
+        ['#mitraStnkFile', '#mitraStnkPreview', 'foto STNK']
+      ];
+      const previewUrls = [];
+      previewBindings.forEach(([inputSelector, previewSelector, label]) => {
+        const fileInput = form.querySelector(inputSelector);
+        const preview = form.querySelector(previewSelector);
+        fileInput?.addEventListener('change', () => {
+          const old = preview.dataset.objectUrl;
+          if (old) { URL.revokeObjectURL(old); previewUrls.splice(previewUrls.indexOf(old), 1); }
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) { preview.textContent = `Pratinjau ${label} akan muncul di sini.`; return; }
+          if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            fileInput.value = ''; preview.textContent = 'File tidak valid. Gunakan JPEG/PNG maksimal 5 MB.'; return;
+          }
+          preview.replaceChildren();
+          const caption = document.createElement('div'); caption.textContent = `Pratinjau ${label}:`;
+          const img = document.createElement('img'); const objectUrl = URL.createObjectURL(file);
+          preview.dataset.objectUrl = objectUrl; previewUrls.push(objectUrl);
+          img.src = objectUrl; img.alt = `Pratinjau ${label}`;
+          img.style.cssText = 'display:block;max-width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-top:8px';
+          preview.append(caption, img);
+        });
+      });
+      form.querySelector('#profileCancel')?.addEventListener('click', () => previewUrls.forEach(url => URL.revokeObjectURL(url)));
+    }
+
+    async function openAccountMode() {
+      if(!currentFirebaseUser){showToast('Silakan login terlebih dahulu.');return;}
+      // Cegah jalur alternatif melalui menu Profil saat Mitra masih Online/Sibuk.
+      if(localStorage.getItem(ROLE_KEY)==='Mitra' && !await canMitraSwitchToBuyer())return;
+      try {
+        const statusData=await callNitipuuyApi('/mitra/status',{method:'GET'});
+        const applicationStatus=(statusData.status || statusData.application?.status || 'none').toLowerCase();
+        const roleData=await callNitipuuyApi('/role/me',{method:'GET'});
+        const approved=roleData.role==='Mitra' && applicationStatus==='approved';
+        const current=localStorage.getItem(ROLE_KEY)||'Pembeli';
+        if(approved){
+          openProfileForm('Pilih mode akun',
+            `<div class="role-intro">Pendaftaran Mitra kamu sudah disetujui. Pilih ruang kerja yang ingin digunakan.</div>
+             <label class="profile-choice role-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}><span>🛍️ <b>Mode Pembeli</b><small>Cari layanan dan buat pesanan.</small></span></label>
+             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;localStorage.setItem(ROLE_KEY,chosen);setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);showToast(`Mode ${chosen} aktif.`);});
+          return;
+        }
+        if(applicationStatus==='pending'){
+          showModal('Pengajuan Mitra sedang ditinjau','Terima kasih sudah mendaftar. Admin sedang memeriksa data kamu. Mode Mitra akan tersedia setelah pengajuan disetujui. Untuk sementara, kamu tetap bisa menggunakan Mode Pembeli.');
+          return;
+        }
+        if(applicationStatus==='rejected'){
+          const app=statusData.application||{};
+          if(app.canReapply===true){openSecureMitraApplication();return;}
+          const reason=app.rejectionReason?`\n\nAlasan Admin: ${app.rejectionReason}`:'';
+          const until=Number(app.reapplyAvailableAt||0);
+          const date=until?new Date(until).toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'}):'setelah masa tunggu 7 hari dari penolakan';
+          showModal('Pengajuan Mitra ditolak',`Pengajuan kamu belum disetujui.${reason}\n\nKamu dapat mengajukan ulang mulai ${date}. Selama menunggu, Mode Pembeli tetap bisa digunakan.`);
+          return;
+        }
+        openSecureMitraApplication();
+      } catch(error) {
+        console.error('Pemeriksaan status Mitra gagal:',error);
+        showModal('Status Mitra belum dapat diperiksa',error.message+' Pastikan Worker sudah memiliki endpoint GET /mitra/status. Mode Pembeli tetap dapat digunakan.');
+      }
     }
     function openPaymentSettings() {
       const current=localStorage.getItem(PAYMENT_KEY)||'Tunai (COD)';
       openProfileForm('Metode pembayaran',`<label class="profile-choice"><input type="radio" name="payment" value="Tunai (COD)" ${current==='Tunai (COD)'?'checked':''}> 💵 Tunai saat pesanan diterima (COD)</label><div class="profile-hint">Untuk tahap prototipe, pembayaran digital belum tersedia. Pembayaran dilakukan langsung kepada mitra sesuai kesepakatan.</div>`,{},fd=>{localStorage.setItem(PAYMENT_KEY,fd.get('payment')||'Tunai (COD)');showToast('Metode pembayaran disimpan.');});
     }
     function openHelp() { showModal('Bantuan & dukungan','Butuh bantuan menggunakan Titipuuy? Untuk prototipe ini, pastikan alamat dan nomor telepon sudah benar sebelum membuat pesanan. Jika pesanan bermasalah, siapkan nomor pesanan dan hubungi tim dukungan setelah kanal resmi tersedia.'); }
-    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.0.1 · Firebase Authentication, sinkronisasi profil, role Pembeli/Mitra, dan pesanan realtime.'); }
+    function openAbout() { showModal('Tentang Titipuuy','Titipuuy — Teman Urusanmu. Prototipe layanan titip dan antar untuk membantu kebutuhan harian. Versi 2.4.1 · Firebase Authentication, pesanan realtime, chat per pesanan, kirim foto terkompresi, dan status Mitra melalui Worker.'); }
     renderProfile();
     document.getElementById('editProfileBtn').addEventListener('click', openPersonalInfo);
     document.querySelectorAll('[data-profile-action]').forEach(button => button.addEventListener('click', () => {
