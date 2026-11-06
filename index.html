@@ -1326,8 +1326,15 @@
         <label>Nomor kendaraan<input name="vehicleNumber" required minlength="3" maxlength="20" placeholder="Contoh: T1234AB"></label>
         <label>Foto KTP (JPEG/PNG, maksimal 5 MB)<input id="mitraKtpFile" name="ktp" type="file" accept="image/jpeg,image/png" required></label>
         <div id="mitraKtpPreview" class="profile-hint" aria-live="polite">Pratinjau foto KTP akan muncul di sini.</div>
-        <label class="profile-choice" style="align-items:flex-start"><input name="privacyConsent" type="checkbox" value="true" required><span>Saya menyetujui pemrosesan NIK dan foto KTP untuk verifikasi pendaftaran Mitra. Dokumen disimpan secara privat dan hanya dapat diakses Admin berwenang.</span></label>
-        <div class="profile-hint">Pengujian: gunakan dokumen dummy. Jangan unggah KTP asli sebelum seluruh proses akses, retensi, dan penghapusan dokumen selesai diuji.</div>
+        <label>Selfie sambil memegang KTP (JPEG/PNG, maksimal 5 MB)<input id="mitraSelfieFile" name="selfieKtp" type="file" accept="image/jpeg,image/png" required></label>
+        <div id="mitraSelfiePreview" class="profile-hint" aria-live="polite">Pratinjau selfie + KTP akan muncul di sini.</div>
+        <div id="mitraStnkGroup" class="hidden">
+          <label>Foto STNK motor (JPEG/PNG, maksimal 5 MB)<input id="mitraStnkFile" name="stnk" type="file" accept="image/jpeg,image/png"></label>
+          <div id="mitraStnkPreview" class="profile-hint" aria-live="polite">STNK wajib khusus Mitra yang menggunakan sepeda motor.</div>
+        </div>
+        <label class="profile-choice" style="align-items:flex-start"><input name="vehiclePermission" type="checkbox" value="true" required><span>Saya pemilik kendaraan atau memiliki izin dari pemilik untuk menggunakan kendaraan ini.</span></label>
+        <label class="profile-choice" style="align-items:flex-start"><input name="privacyConsent" type="checkbox" value="true" required><span>Saya menyetujui pemrosesan NIK, foto KTP, dan selfie dengan KTP. Foto STNK diproses jika saya mendaftar menggunakan sepeda motor. Dokumen disimpan secara privat dan hanya dapat diakses Admin berwenang sesuai kebijakan retensi.</span></label>
+        <div class="profile-hint">Gunakan dokumen dummy untuk pengujian. Jangan unggah dokumen asli sebelum akses Admin, retensi, dan penghapusan seluruh dokumen selesai diuji.</div>
       `, {}, async (fd, formEl) => {
         const fullName = String(fd.get('fullName') || '').trim();
         const nik = String(fd.get('nik') || '').replace(/\s/g, '');
@@ -1336,17 +1343,28 @@
         const vehicleType = String(fd.get('vehicleType') || '').trim();
         const vehicleNumber = String(fd.get('vehicleNumber') || '').trim().toUpperCase();
         const ktp = fd.get('ktp');
+        const selfieKtp = fd.get('selfieKtp');
+        const stnk = fd.get('stnk');
+        const requiresStnk = /^motor$/i.test(vehicleType);
         if (fullName.length < 3 || !/^\d{16}$/.test(nik)) throw new Error('Nama wajib diisi dan NIK harus tepat 16 digit.');
         if (!/^[0-9+() .-]{8,20}$/.test(phone)) throw new Error('Format nomor WhatsApp tidak valid.');
         if (address.length < 5 || !vehicleType || vehicleNumber.length < 3) throw new Error('Lengkapi alamat dan data kendaraan.');
         if (!(ktp instanceof File) || !ktp.size || ktp.size > 5 * 1024 * 1024) throw new Error('Pilih foto KTP maksimal 5 MB.');
         if (!['image/jpeg', 'image/png'].includes(ktp.type)) throw new Error('Foto KTP harus JPEG atau PNG.');
+        if (!(selfieKtp instanceof File) || !selfieKtp.size || selfieKtp.size > 5 * 1024 * 1024) throw new Error('Pilih foto selfie + KTP maksimal 5 MB.');
+        if (!['image/jpeg', 'image/png'].includes(selfieKtp.type)) throw new Error('Foto selfie + KTP harus JPEG atau PNG.');
+        if (requiresStnk) {
+          if (!(stnk instanceof File) || !stnk.size || stnk.size > 5 * 1024 * 1024) throw new Error('Mitra motor wajib mengunggah foto STNK maksimal 5 MB.');
+          if (!['image/jpeg', 'image/png'].includes(stnk.type)) throw new Error('Foto STNK harus JPEG atau PNG.');
+        }
+        if (fd.get('vehiclePermission') !== 'true') throw new Error('Konfirmasi kepemilikan atau izin penggunaan kendaraan wajib dicentang.');
         if (fd.get('privacyConsent') !== 'true') throw new Error('Persetujuan pemrosesan data wajib dicentang.');
         const body = new FormData();
         body.append('fullName', fullName); body.append('nik', nik); body.append('phone', phone);
         body.append('address', address); body.append('vehicleType', vehicleType);
         body.append('vehicleNumber', vehicleNumber); body.append('ktp', ktp, ktp.name);
-        body.append('privacyConsent', 'true');
+        body.append('selfieKtp', selfieKtp, selfieKtp.name); if (requiresStnk) body.append('stnk', stnk, stnk.name);
+        body.append('vehiclePermission', 'true'); body.append('privacyConsent', 'true');
         const token = await currentFirebaseUser.getIdToken(true);
         const response = await fetch(`${NITIPUUY_API}/mitra/apply-secure`, {
           method: 'POST', headers: { Authorization: `Bearer ${token}` }, body
@@ -1356,25 +1374,44 @@
         showToast('Pengajuan Mitra berhasil dikirim dan menunggu pemeriksaan Admin.');
         return true;
       });
-      const fileInput = form.querySelector('#mitraKtpFile');
-      const preview = form.querySelector('#mitraKtpPreview');
-      let previewUrl = null;
-      fileInput?.addEventListener('change', () => {
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        previewUrl = null;
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) { preview.textContent = 'Pratinjau foto KTP akan muncul di sini.'; return; }
-        if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-          fileInput.value = ''; preview.textContent = 'File tidak valid. Gunakan JPEG/PNG maksimal 5 MB.'; return;
-        }
-        preview.replaceChildren();
-        const label = document.createElement('div'); label.textContent = 'Pratinjau dokumen:';
-        const img = document.createElement('img'); previewUrl = URL.createObjectURL(file);
-        img.src = previewUrl; img.alt = 'Pratinjau dokumen KTP';
-        img.style.cssText = 'display:block;max-width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-top:8px';
-        preview.append(label, img);
+      const vehicleSelect = form.querySelector('[name=vehicleType]');
+      const stnkGroup = form.querySelector('#mitraStnkGroup');
+      const stnkInput = form.querySelector('#mitraStnkFile');
+      const syncStnkRequirement = () => {
+        const required = /^motor$/i.test(vehicleSelect.value);
+        stnkGroup.classList.toggle('hidden', !required);
+        stnkInput.required = required;
+        if (!required) { stnkInput.value = ''; const preview = form.querySelector('#mitraStnkPreview'); preview.textContent = 'STNK tidak diperlukan untuk kendaraan nonmotor.'; }
+      };
+      vehicleSelect.addEventListener('change', syncStnkRequirement);
+      syncStnkRequirement();
+      const previewBindings = [
+        ['#mitraKtpFile', '#mitraKtpPreview', 'foto KTP'],
+        ['#mitraSelfieFile', '#mitraSelfiePreview', 'selfie + KTP'],
+        ['#mitraStnkFile', '#mitraStnkPreview', 'foto STNK']
+      ];
+      const previewUrls = [];
+      previewBindings.forEach(([inputSelector, previewSelector, label]) => {
+        const fileInput = form.querySelector(inputSelector);
+        const preview = form.querySelector(previewSelector);
+        fileInput?.addEventListener('change', () => {
+          const old = preview.dataset.objectUrl;
+          if (old) { URL.revokeObjectURL(old); previewUrls.splice(previewUrls.indexOf(old), 1); }
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) { preview.textContent = `Pratinjau ${label} akan muncul di sini.`; return; }
+          if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            fileInput.value = ''; preview.textContent = 'File tidak valid. Gunakan JPEG/PNG maksimal 5 MB.'; return;
+          }
+          preview.replaceChildren();
+          const caption = document.createElement('div'); caption.textContent = `Pratinjau ${label}:`;
+          const img = document.createElement('img'); const objectUrl = URL.createObjectURL(file);
+          preview.dataset.objectUrl = objectUrl; previewUrls.push(objectUrl);
+          img.src = objectUrl; img.alt = `Pratinjau ${label}`;
+          img.style.cssText = 'display:block;max-width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-top:8px';
+          preview.append(caption, img);
+        });
       });
-      form.querySelector('#profileCancel')?.addEventListener('click', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); });
+      form.querySelector('#profileCancel')?.addEventListener('click', () => previewUrls.forEach(url => URL.revokeObjectURL(url)));
     }
 
     async function openAccountMode() {
