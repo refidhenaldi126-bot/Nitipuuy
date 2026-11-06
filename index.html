@@ -1434,7 +1434,12 @@
           return;
         }
         if(applicationStatus==='rejected'){
-          showModal('Pengajuan Mitra ditolak','Pengajuan kamu belum disetujui. Silakan hubungi Admin Nitipuuy untuk mengetahui alasannya dan langkah pengajuan kembali.');
+          const app=statusData.application||{};
+          if(app.canReapply===true){openSecureMitraApplication();return;}
+          const reason=app.rejectionReason?`\n\nAlasan Admin: ${app.rejectionReason}`:'';
+          const until=Number(app.reapplyAvailableAt||0);
+          const date=until?new Date(until).toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'}):'setelah masa tunggu 7 hari dari penolakan';
+          showModal('Pengajuan Mitra ditolak',`Pengajuan kamu belum disetujui.${reason}\n\nKamu dapat mengajukan ulang mulai ${date}. Selama menunggu, Mode Pembeli tetap bisa digunakan.`);
           return;
         }
         openSecureMitraApplication();
