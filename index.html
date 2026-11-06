@@ -749,7 +749,7 @@
     const modalText = document.getElementById('modalText');
     let toastTimer;
 
-    // Firebase Authentication + Realtime Database (v0.6.5).
+    // Firebase Authentication + Realtime Database (v1.8).
     // Database writes require the owner-only rules supplied with this release.
     const firebaseConfig = {
       apiKey: "AIzaSyCN10a81vb2miDx4ScYgxuDS_W3OxM1AB0",
@@ -785,8 +785,7 @@
         'auth/email-already-in-use':'Email sudah terdaftar. Silakan masuk.',
         'auth/weak-password':'Kata sandi terlalu lemah. Gunakan minimal 6 karakter.',
         'auth/popup-closed-by-user':'Jendela login Google ditutup sebelum selesai.',
-        'auth/popup-blocked':'Popup diblokir browser. Coba izinkan popup atau gunakan metode login lain.',
-        'auth/operation-not-supported-in-this-environment':'Metode login ini tidak didukung browser. Coba browser lain.',
+        'auth/popup-blocked':'Popup diblokir browser. Izinkan popup atau coba lagi.',
         'auth/unauthorized-domain':'Domain belum diizinkan di Firebase Authentication → Settings → Authorized domains.',
         'auth/network-request-failed':'Koneksi internet bermasalah. Periksa jaringan lalu coba lagi.',
         'auth/too-many-requests':'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.'
@@ -822,10 +821,8 @@
       try{
         await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const provider=new firebase.auth.GoogleAuthProvider();
-        // Gunakan redirect agar alur OAuth tidak bergantung pada window.closed
-        // yang dapat dibatasi Cross-Origin-Opener-Policy (COOP) browser.
-        provider.setCustomParameters({ prompt: 'select_account' });
-        await firebaseAuth.signInWithRedirect(provider);
+        // Jangan paksa pemilih akun setiap kali; Firebase akan memakai sesi login yang tersimpan.
+        await firebaseAuth.signInWithPopup(provider);
       }
       catch(error){authMessage(friendlyAuthError(error));}
       finally{setAuthBusy(false);}
@@ -858,13 +855,6 @@
       if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       firebaseAuth=firebase.auth();
       firebaseDb=firebase.database();
-      // Ambil hasil Google Redirect setelah browser kembali dari halaman OAuth.
-      // Sesi tetap diproses oleh onAuthStateChanged di bawah agar tidak ada dua alur login.
-      firebaseAuth.getRedirectResult().catch(error=>{
-        console.error('Google redirect sign-in:', error);
-        authGate.hidden=false;
-        authMessage(friendlyAuthError(error));
-      });
       firebaseAuth.onAuthStateChanged(async user=>{
         currentFirebaseUser=user||null;orderListenersStarted=false;cloudBuyerOrders=[];cloudBoardOrders=[];cloudMitraOrders=[];
         if(user){
