@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v0.8.1 — Mitra Dashboard UX Fix</title>
+  <title>Titipuuy v0.8.2 — Session & Icon Fix</title>
   <style>
     :root {
       --orange: #f98413;
@@ -532,10 +532,11 @@
 @media(prefers-reduced-motion:no-preference){.mitra-complete-slider{transition:background .2s,border-color .2s}.mitra-complete-slider .complete-thumb{transition:transform .08s linear}}
 </style>
 
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
-  <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-  <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=082">
+  <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png?v=082">
+  <link rel="shortcut icon" href="./favicon.ico?v=082">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=082">
+  <link rel="manifest" href="./manifest.webmanifest?v=082">
 
 </head>
 <body>
@@ -945,17 +946,22 @@
             const profile={...existing,...(cloud.profile||{}),name:(cloud.profile&&cloud.profile.name)||existing.name||user.displayName||'',email:user.email||existing.email||''};
             localStorage.setItem('nitipuuy_profile',JSON.stringify(profile));
             updateWelcomeHeading({displayName:profile.name});
-            // Mode Mitra hanya boleh aktif jika endpoint status menyatakan approved.
-            // Jangan mempercayai users/{uid}/role saja karena aturan RTDB lama masih perlu diaudit.
+            // Pertahankan pilihan mode terakhir. Server tetap menjadi sumber kebenaran
+            // untuk status persetujuan Mitra; kegagalan jaringan tidak boleh menghapus mode.
+            const savedAccountMode = localStorage.getItem('nitipuuy_account_mode') || 'Pembeli';
             try {
               const token=await user.getIdToken(true);
               const statusResponse=await fetch('https://nitipuuy-api.refidhenaldi126.workers.dev/mitra/status',{headers:{'Authorization':`Bearer ${token}`}});
               const statusResult=await statusResponse.json();
               const isApproved=statusResponse.ok && statusResult.success===true && statusResult.status==='approved' && statusResult.role==='Mitra';
-              localStorage.setItem('nitipuuy_account_mode',isApproved?'Mitra':'Pembeli');
+              if (!isApproved) {
+                localStorage.setItem('nitipuuy_account_mode','Pembeli');
+              } else {
+                localStorage.setItem('nitipuuy_account_mode',savedAccountMode==='Mitra'?'Mitra':'Pembeli');
+              }
             } catch(roleError) {
-              console.warn('Status Mitra server tidak dapat dibaca; menggunakan Mode Pembeli:',roleError);
-              localStorage.setItem('nitipuuy_account_mode','Pembeli');
+              console.warn('Status Mitra server sementara tidak dapat diperiksa; mempertahankan mode terakhir:',roleError);
+              localStorage.setItem('nitipuuy_account_mode',savedAccountMode==='Mitra'?'Mitra':'Pembeli');
             }
             if(!cloud.profile) await ref.child('profile').set({name:profile.name,email:profile.email,photoURL:user.photoURL||'',phone:profile.phone||'',updatedAt:firebase.database.ServerValue.TIMESTAMP});
             // Jangan pernah membuat atau mengubah role dari frontend.
@@ -966,6 +972,9 @@
             try{const existing=JSON.parse(localStorage.getItem('nitipuuy_profile')||'{}');localStorage.setItem('nitipuuy_profile',JSON.stringify({...existing,name:existing.name||user.displayName||'',email:user.email||existing.email||''}));}catch{}
           }
           if(typeof renderProfile==='function') renderProfile();
+          // Pulihkan halaman sesuai mode akun yang terakhir dipilih setelah refresh.
+          if(localStorage.getItem('nitipuuy_account_mode')==='Mitra') navigateTo('Dashboard');
+          else navigateTo('Beranda');
           startOrderListeners();
         }else{
           localStorage.setItem('nitipuuy_account_mode','Pembeli');
