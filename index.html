@@ -1075,25 +1075,31 @@
     function getRealOrders(){try{const v=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return [];}}
     function saveRealOrders(items){localStorage.setItem(ORDER_KEY,JSON.stringify(items));}
     function allBuyerOrders(){return cloudBuyerOrders.length?cloudBuyerOrders:getRealOrders();}
-    function startOrderListeners(){
-      if(!firebaseDb||!currentFirebaseUser||orderListenersStarted)return;orderListenersStarted=true;
-      firebaseDb.ref('ordersByBuyer/'+currentFirebaseUser.uid).on('value',snap=>{
-        cloudBuyerOrders=Object.entries(snap.val()||{}).map(([key,value])=>({...value,_key:key})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    let orderRefreshTimer = null;
+    async function refreshOrderData(){
+      if(!currentFirebaseUser)return;
+      try{
+        const buyer=await titipuuyApi('/orders/mine');
+        cloudBuyerOrders=Array.isArray(buyer.orders)?buyer.orders:[];
         saveRealOrders(cloudBuyerOrders);renderOrders();renderProfile();
-      },err=>{console.warn('Listener pesanan pembeli:',err);showToast('Tidak dapat memuat pesanan pembeli. Periksa Rules Firebase.');});
-      firebaseDb.ref('orderBoard').on('value',snap=>{
-        cloudBoardOrders=Object.entries(snap.val()||{}).map(([key,value])=>({...value,_key:key})).filter(o=>!o.mitraUid||o.mitraUid===currentFirebaseUser.uid).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-        loadMitraPrivateOrders();
-      },err=>{console.warn('Listener papan pesanan:',err);showToast('Papan pesanan Mitra belum dapat diakses. Periksa Rules Firebase.');});
+      }catch(error){console.warn('API riwayat pembeli:',error);}
+      if((localStorage.getItem(ROLE_KEY)||'Pembeli')==='Mitra'){
+        try{
+          const mitra=await titipuuyApi('/mitra/orders');
+          cloudBoardOrders=(mitra.orders||[]).filter(o=>!o.mitraUid);
+          cloudMitraOrders=(mitra.orders||[]).filter(o=>o.mitraUid===currentFirebaseUser.uid);
+          renderMitraDashboard();
+        }catch(error){console.warn('API papan Mitra:',error);showToast(error.message||'Gagal memuat pesanan Mitra.');}
+      }
     }
-    function loadMitraPrivateOrders(){
-      if(!firebaseDb||!currentFirebaseUser)return;
-      const mine=cloudBoardOrders.filter(o=>o.mitraUid===currentFirebaseUser.uid);
-      Promise.all(mine.map(async o=>{const snap=await firebaseDb.ref('orders/'+o._key).once('value');return snap.exists()?{...snap.val(),_key:o._key}:null;})).then(rows=>{
-        cloudMitraOrders=rows.filter(Boolean);renderMitraDashboard();
-      }).catch(err=>console.warn('Gagal membaca detail pesanan Mitra:',err));
-      renderMitraDashboard();
+    function startOrderListeners(){
+      if(!currentFirebaseUser||orderListenersStarted)return;
+      orderListenersStarted=true;
+      refreshOrderData();
+      if(orderRefreshTimer)clearInterval(orderRefreshTimer);
+      orderRefreshTimer=setInterval(refreshOrderData,10000);
     }
+    function loadMitraPrivateOrders(){ refreshOrderData(); }
     function renderMitraDashboard(){
       const role=localStorage.getItem(ROLE_KEY)||'Pembeli';if(role!=='Mitra')return;
       const incoming=cloudBoardOrders.filter(o=>!o.mitraUid&&o.status==='Menunggu mitra');
@@ -1102,23 +1108,23 @@
       document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
       const list=document.getElementById('mitraOrderList');
       const cards=[...incoming.map(o=>({...o,_incoming:true})),...cloudMitraOrders];
-      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o._key)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
+      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<button data-mitra-action="complete" data-id="${escapeHtml(o._key)}">Selesaikan</button>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p>${o.address?`<p>📍 ${escapeHtml(o.address.detail||'')}<br>☎ ${escapeHtml(o.address.phone||'')}</p>`:''}<div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div></article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan yang tersedia akan muncul di sini.</p></div>';
       list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));
     }
     async function updateMitraOrder(key,action){
-      if(!firebaseDb||!currentFirebaseUser)return;const boardRef=firebaseDb.ref('orderBoard/'+key);
+      if(!currentFirebaseUser)return;
+      const button=document.querySelector(`[data-id="${CSS.escape(key)}"][data-mitra-action="${action}"]`);
+      if(button){button.disabled=true;button.textContent='Memproses…';}
       try{
-        if(action==='accept'){
-          const result=await boardRef.transaction(current=>{if(!current||current.mitraUid||current.status!=='Menunggu mitra')return;current.mitraUid=currentFirebaseUser.uid;current.status='Diterima';return current;});
-          if(!result.committed){showToast('Pesanan sudah diambil Mitra lain.');return;}
-          const privateRef=firebaseDb.ref('orders/'+key);const privateSnap=await privateRef.once('value');const privateOrder=privateSnap.val();if(!privateOrder)throw new Error('Data pesanan tidak ditemukan.');const steps=Array.isArray(privateOrder.steps)?privateOrder.steps:[];steps.push('Mitra menerima pesanan');const changes={mitraUid:currentFirebaseUser.uid,status:'Diterima',note:'Mitra menerima pesanan.',updatedAt:firebase.database.ServerValue.TIMESTAMP,steps};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+privateOrder.buyerUid+'/'+key).update(changes);
-        }else{
-          const map={prepare:['Disiapkan','Mitra mulai menyiapkan pesanan'],deliver:['Dalam perjalanan','Mitra mulai mengantar pesanan'],complete:['Selesai','Pesanan berhasil diselesaikan']};const next=map[action];if(!next)return;
-          const privateRef=firebaseDb.ref('orders/'+key);const snap=await privateRef.once('value');const order=snap.val();if(!order||order.mitraUid!==currentFirebaseUser.uid){showToast('Pesanan ini bukan tanggung jawab akunmu.');return;}
-          const steps=Array.isArray(order.steps)?order.steps:[];steps.push(next[1]);const changes={status:next[0],note:next[1]+'.',steps,updatedAt:firebase.database.ServerValue.TIMESTAMP};await privateRef.update(changes);await firebaseDb.ref('ordersByBuyer/'+order.buyerUid+'/'+key).update(changes);await boardRef.update({status:next[0]});
+        if(action==='accept')await titipuuyApi(`/mitra/orders/${encodeURIComponent(key)}/claim`,{method:'POST',body:'{}'});
+        else{
+          const map={prepare:'Disiapkan',deliver:'Dalam perjalanan',complete:'Selesai'};
+          const status=map[action];if(!status)throw new Error('Aksi pesanan tidak dikenal.');
+          await titipuuyApi(`/mitra/orders/${encodeURIComponent(key)}/status`,{method:'POST',body:JSON.stringify({status})});
         }
-        showToast(action==='accept'?'Pesanan berhasil diambil. Detail alamat tersedia di pesananmu.':'Status pesanan diperbarui.');
-      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast('Perubahan gagal. Periksa Firebase Security Rules v2.0.');}
+        showToast(action==='accept'?'Pesanan berhasil diambil.':'Status pesanan diperbarui.');
+        await refreshOrderData();
+      }catch(error){console.error('Perubahan pesanan gagal:',error);showToast(error.message||'Perubahan pesanan gagal.');if(button){button.disabled=false;}}
     }
     document.getElementById('switchBuyer').addEventListener('click',async()=>{
       const button=document.getElementById('switchBuyer'); button.disabled=true;
