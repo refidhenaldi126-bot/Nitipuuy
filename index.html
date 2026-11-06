@@ -459,7 +459,63 @@
     .chat-action-btn{border:0;border-radius:12px;padding:10px 13px;background:#fff0dc;color:#a94f08;font-weight:800;margin-top:10px}
     @media(max-width:560px){.chat-backdrop{padding:0}.chat-panel{width:100%;height:100dvh;max-height:100dvh;border-radius:0}.chat-bubble{max-width:88%}}
 
-  </style>
+  
+/* v0.6.6.1 — status controls: green/red glass treatment */
+.mitra-presence-state.online{
+  background:rgba(34,197,94,.16);
+  color:#16834b;
+  border:1px solid rgba(22,163,74,.24);
+  box-shadow:0 0 0 1px rgba(34,197,94,.05),0 0 13px rgba(34,197,94,.18);
+}
+.mitra-presence-state.offline{
+  background:rgba(239,68,68,.13);
+  color:#dc2626;
+  border:1px solid rgba(220,38,38,.22);
+  box-shadow:0 0 0 1px rgba(239,68,68,.04),0 0 12px rgba(239,68,68,.14);
+}
+.mitra-presence-state.busy{
+  background:rgba(245,158,11,.16);
+  color:#b76a00;
+  border:1px solid rgba(217,119,6,.22);
+}
+.mitra-presence-actions .mitra-online-btn{
+  color:#08783f;
+  background:linear-gradient(135deg,rgba(74,222,128,.27),rgba(22,163,74,.12));
+  border:1px solid rgba(22,163,74,.42);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 5px 16px rgba(22,163,74,.12);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.mitra-presence-actions .mitra-offline-btn{
+  color:#b91c1c;
+  background:linear-gradient(135deg,rgba(248,113,113,.25),rgba(220,38,38,.11));
+  border:1px solid rgba(220,38,38,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 5px 16px rgba(220,38,38,.10);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.mitra-presence-actions .mitra-online-btn.is-active{
+  background:linear-gradient(135deg,rgba(74,222,128,.48),rgba(22,163,74,.25));
+  border-color:rgba(22,163,74,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 0 0 2px rgba(34,197,94,.10),0 0 20px rgba(34,197,94,.24);
+}
+.mitra-presence-actions .mitra-offline-btn.is-active{
+  background:linear-gradient(135deg,rgba(248,113,113,.43),rgba(220,38,38,.22));
+  border-color:rgba(220,38,38,.68);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 0 0 2px rgba(239,68,68,.09),0 0 18px rgba(220,38,38,.20);
+}
+.mitra-presence-actions button:disabled{
+  opacity:1;
+  cursor:default;
+  filter:saturate(.92);
+}
+@media(prefers-reduced-motion:no-preference){
+  .mitra-presence-actions button:not(:disabled):active{transform:translateY(1px) scale(.99)}
+}
+
+</style>
 </head>
 <body>
 
@@ -1134,6 +1190,8 @@
       desc.textContent=busy?'Kamu sedang menangani pesanan aktif. Status akan kembali tersedia setelah pesanan selesai.':(mitraPresenceState==='online'?'Kamu siap menerima pesanan baru selama aplikasi dan koneksi aktif.':'Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.');
       online.disabled=busy||mitraPresenceState==='online';
       offline.disabled=busy||mitraPresenceState==='offline';
+      online.classList.toggle('is-active',!busy&&mitraPresenceState==='online');
+      offline.classList.toggle('is-active',!busy&&mitraPresenceState==='offline');
       note.textContent=busy?'Status Offline tidak tersedia selama masih ada pesanan aktif.':'Status operasional tersimpan melalui server.';
     }
     async function refreshMitraPresence(){
