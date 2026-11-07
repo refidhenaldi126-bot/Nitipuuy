@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v0.9.1 — Rider Navigation</title>
+  <title>Titipuuy v0.9.2 — Transparent Mascot Navigation</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
     :root {
@@ -27,7 +27,7 @@
     }
 
 
-    /* Titipuuy v0.9.1 — Rider Navigation */
+    /* Titipuuy v0.9.2 — Transparent Mascot Navigation */
     .mitra-map-card{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:20px;padding:12px;margin:12px 0 16px;box-shadow:var(--shadow-small)}
     .mitra-map-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 10px}
     .mitra-map-top strong{font-size:.95rem}.mitra-map-top span{font-size:.72rem;color:var(--muted)}
@@ -35,9 +35,9 @@
     .mitra-map-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px 1px;font-size:.75rem;color:var(--muted)}
     .mitra-map-locate{border:0;border-radius:999px;background:#fff0dc;color:#a94f08;padding:8px 12px;font-weight:850}
     .titipuuy-map-marker{background:transparent;border:0}
-    .titipuuy-map-marker .rider-marker-frame{width:68px;height:68px;border:3px solid #fff;border-radius:18px;overflow:hidden;background:#f98413;box-shadow:0 4px 15px rgba(45,25,12,.42);position:relative}
-    .titipuuy-map-marker img{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;transform-origin:center center}
-    .titipuuy-map-marker .rider-marker-pin{position:absolute;left:50%;bottom:-9px;width:14px;height:14px;background:#f98413;border:3px solid #fff;border-radius:50%;transform:translateX(-50%);box-shadow:0 2px 5px #0004}
+    /* v0.9.2: transparent rider mascot marker — no card/frame/background */
+    .titipuuy-map-marker .rider-mascot-img{display:block;width:78px;height:78px;object-fit:contain;object-position:center center;transform-origin:50% 50%;filter:drop-shadow(0 3px 4px rgba(35,20,10,.42));pointer-events:none}
+    .titipuuy-map-marker{width:78px!important;height:82px!important}
     .mitra-map-note{font-size:.7rem;color:var(--muted);margin:8px 2px 0;line-height:1.4}
     @media(min-width:700px){#mitraMap{height:390px}}
 
@@ -1700,7 +1700,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-  // Titipuuy v0.9.1: live GPS rider marker. Worker/API/order flows remain untouched.
+  // Titipuuy v0.9.2: transparent PNG rider mascot marker. GPS/API/order flows remain untouched.
   let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null, mitraLastGpsPosition=null;
   const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // initial viewport only; never treated as live location
   function initTitipuuyMitraMap(){
@@ -1710,8 +1710,8 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(mitraLeafletMap);
       const riderIcon=L.divIcon({
         className:'titipuuy-map-marker',
-        html:'<div class="rider-marker-frame"><img src="titipuuy-rider-mascot.jpg" alt="Maskot Mitra Titipuuy"><i class="rider-marker-pin"></i></div>',
-        iconSize:[68,78],iconAnchor:[34,70]
+        html:'<img class="rider-mascot-img" src="titipuuy-rider-mascot.png" alt="Maskot pengendara Titipuuy">',
+        iconSize:[78,82],iconAnchor:[39,78]
       });
       mitraGpsMarker=L.marker(TITIPUUY_MAP_DEFAULT,{icon:riderIcon}).addTo(mitraLeafletMap).bindPopup('🏍️ Maskot Mitra Titipuuy · menunggu GPS');
     }
