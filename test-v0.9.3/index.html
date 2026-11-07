@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v0.9.3 — Route Foundation</title>
+  <title>Titipuuy v0.9.4 — GPS Diagnostics</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
     :root {
@@ -39,6 +39,11 @@
     /* v0.9.2: transparent rider mascot marker — no card/frame/background */
     .titipuuy-map-marker .rider-mascot-img{display:block;width:78px;height:78px;object-fit:contain;object-position:center center;transform-origin:50% 50%;filter:drop-shadow(0 3px 4px rgba(35,20,10,.42));pointer-events:none}
     .titipuuy-map-marker{width:78px!important;height:82px!important}
+    .mitra-gps-diagnostics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 2px}
+    .mitra-gps-metric{padding:8px 10px;border-radius:11px;background:#fff8ef;border:1px solid #f0e2d3;min-width:0}
+    .mitra-gps-metric b{display:block;font-size:.82rem;color:var(--brown);overflow-wrap:anywhere}
+    .mitra-gps-metric small{display:block;font-size:.66rem;color:var(--muted);margin-top:2px}
+    .mitra-gps-quality{display:inline-flex;align-items:center;gap:5px}.mitra-gps-dot{width:7px;height:7px;border-radius:50%;background:#d97706;display:inline-block}
     .mitra-map-note{font-size:.7rem;color:var(--muted);margin:8px 2px 0;line-height:1.4}
     @media(min-width:700px){#mitraMap{height:390px}}
     .route-pick-btn{width:100%;padding:12px;border:1px solid #ead8c7;border-radius:12px;background:#fff8ef;color:var(--brown);font-weight:800;text-align:left;margin:6px 0}
@@ -760,6 +765,12 @@
         <div class="mitra-map-top"><strong>🗺️ Navigasi Mitra</strong><span id="mitraMapState">Menyiapkan peta…</span></div>
         <div id="mitraMap" role="application" aria-label="Peta lokasi Mitra"></div>
         <div class="mitra-map-foot"><span id="mitraMapLocation">Aktifkan GPS untuk melihat posisimu.</span><button type="button" class="mitra-map-locate" id="mitraMapLocate">◎ Lokasi saya</button></div>
+        <div class="mitra-gps-diagnostics" aria-live="polite">
+          <div class="mitra-gps-metric"><b id="gpsAccuracyValue">—</b><small>Akurasi GPS perangkat</small></div>
+          <div class="mitra-gps-metric"><b class="mitra-gps-quality"><i class="mitra-gps-dot" id="gpsQualityDot"></i><span id="gpsQualityValue">Menunggu GPS</span></b><small>Kualitas pembacaan</small></div>
+          <div class="mitra-gps-metric"><b id="gpsCoordinateValue">—</b><small>Koordinat GPS terakhir</small></div>
+          <div class="mitra-gps-metric"><b id="gpsUpdatedValue">—</b><small>Pembaruan terakhir</small></div>
+        </div>
         <div class="mitra-route-summary" id="mitraRouteSummary" aria-live="polite"><h4 id="mitraRouteTitle">Pratinjau rute pesanan</h4><div class="mitra-route-stats"><div><b id="routeLegOne">—</b><small>Mitra → Toko</small></div><div><b id="routeLegTwo">—</b><small>Toko → Pembeli</small></div><div><b id="routeTotal">—</b><small>Total perjalanan</small></div></div><p class="mitra-route-caption" id="mitraRouteCaption">Pilih pesanan untuk melihat rute.</p></div>
         <p class="mitra-map-note">Maskot motor Titipuuy menandai posisi GPS Mitra. Marker diperbarui otomatis saat lokasi bergerak; rute pesanan akan diaktifkan setelah koordinat jemput dan antar tersedia.</p>
       </section>
@@ -987,7 +998,7 @@
             const savedAccountMode = localStorage.getItem('nitipuuy_account_mode') || 'Pembeli';
             try {
               const token=await user.getIdToken(true);
-              const statusResponse=await fetch('https://nitipuuy-api-dev.refidhenaldi126.workers.dev/mitra/status',{headers:{'Authorization':`Bearer ${token}`}});
+              const statusResponse=await fetch('https://nitipuuy-api.refidhenaldi126.workers.dev/mitra/status',{headers:{'Authorization':`Bearer ${token}`}});
               const statusResult=await statusResponse.json();
               const isApproved=statusResponse.ok && statusResult.success===true && statusResult.status==='approved' && statusResult.role==='Mitra';
               if (!isApproved) {
@@ -1458,7 +1469,7 @@
       });
     }
     // Role tidak boleh ditulis dari frontend. Perubahan role Mitra hanya melalui Worker setelah persetujuan Admin.
-    const NITIPUUY_API = 'https://nitipuuy-api-dev.refidhenaldi126.workers.dev';
+    const NITIPUUY_API = 'https://nitipuuy-api.refidhenaldi126.workers.dev';
     async function callNitipuuyApi(path, options={}) {
       if(!currentFirebaseUser) throw new Error('Silakan login kembali.');
       const token=await currentFirebaseUser.getIdToken(true);
@@ -1721,7 +1732,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-  // v0.9.3 route point picker. Coordinates are saved with each order/address.
+  // v0.9.4 route point picker. Coordinates are saved with each order/address.
   let pickupPoint=null,newDeliveryPoint=null,routePickerMap=null,routePickerMarker=null,routePickerMode=null;
   const ROUTE_DEFAULT=[-6.5569,107.4439];
   function openRoutePicker(mode,query,existing){
@@ -1739,8 +1750,9 @@
   document.getElementById('routePickerClose').addEventListener('click',closeRoutePicker);
   </script>
   <script>
-  // Titipuuy v0.9.3: transparent PNG rider mascot marker. GPS/API/order flows remain untouched.
-  let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null, mitraLastGpsPosition=null;
+  // Titipuuy v0.9.4: GPS diagnostics, accuracy radius and light position smoothing.
+  let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null, mitraLastGpsPosition=null, mitraGpsAccuracyCircle=null;
+  let mitraGpsAcceptedAt=0, mitraGpsFiltered=null;
   const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // initial viewport only; never treated as live location
   function initTitipuuyMitraMap(){
     const el=document.getElementById('mitraMap'); if(!el||!window.L)return;
@@ -1759,15 +1771,49 @@
     const state=document.getElementById('mitraMapState');
     const label=document.getElementById('mitraMapLocation');
     const updatePosition=(pos)=>{
-      const lat=pos.coords.latitude, lng=pos.coords.longitude;
-      const point=[lat,lng];
-      mitraLastGpsPosition={lat,lng,accuracy:pos.coords.accuracy,heading:pos.coords.heading,timestamp:pos.timestamp};
+      const lat=pos.coords.latitude, lng=pos.coords.longitude, accuracy=Number(pos.coords.accuracy)||9999;
+      const now=pos.timestamp||Date.now();
+      // Tolak lonjakan koordinat yang tidak masuk akal; jangan menggeser marker ke titik yang jelas-jelas menyimpang.
+      if(mitraGpsFiltered){
+        const rad=x=>x*Math.PI/180;
+        const dLat=rad(lat-mitraGpsFiltered.lat), dLng=rad(lng-mitraGpsFiltered.lng);
+        const h=Math.sin(dLat/2)**2+Math.cos(rad(mitraGpsFiltered.lat))*Math.cos(rad(lat))*Math.sin(dLng/2)**2;
+        const jump=6371000*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+        const elapsed=Math.max(1,(now-mitraGpsAcceptedAt)/1000);
+        const plausible=Math.max(90,elapsed*45+accuracy+(mitraGpsFiltered.accuracy||0));
+        if(jump>plausible && accuracy>25){
+          state.textContent='GPS aktif · menyaring lonjakan posisi';
+          const av=document.getElementById('gpsAccuracyValue'); if(av)av.textContent=`±${Math.round(accuracy)} m`;
+          const q=document.getElementById('gpsQualityValue'); if(q)q.textContent=accuracy<=20?'Baik':accuracy<=50?'Sedang':'Lemah';
+          return;
+        }
+      }
+      // Posisi marker dihaluskan ringan; koordinat mentah tetap ditampilkan untuk diagnosis.
+      if(!mitraGpsFiltered){mitraGpsFiltered={lat,lng,accuracy};}
+      else{
+        const alpha=accuracy<=10?.72:accuracy<=25?.58:accuracy<=50?.42:.28;
+        mitraGpsFiltered={lat:mitraGpsFiltered.lat+(lat-mitraGpsFiltered.lat)*alpha,lng:mitraGpsFiltered.lng+(lng-mitraGpsFiltered.lng)*alpha,accuracy};
+      }
+      mitraGpsAcceptedAt=now;
+      const displayLat=mitraGpsFiltered.lat, displayLng=mitraGpsFiltered.lng;
+      mitraLastGpsPosition={lat,lng,accuracy,heading:pos.coords.heading,timestamp:now,filteredLat:displayLat,filteredLng:displayLng};
+      const point=[displayLat,displayLng];
       mitraGpsMarker.setLatLng(point);
+      if(!mitraGpsAccuracyCircle)mitraGpsAccuracyCircle=L.circle([lat,lng],{radius:accuracy,color:'#f97316',weight:1,opacity:.65,fillColor:'#fb923c',fillOpacity:.10,interactive:false}).addTo(mitraLeafletMap);
+      else mitraGpsAccuracyCircle.setLatLng([lat,lng]).setRadius(accuracy);
       const img=mitraGpsMarker.getElement()?.querySelector('img');
       if(img && Number.isFinite(pos.coords.heading)) img.style.transform=`rotate(${pos.coords.heading}deg)`;
-      mitraGpsMarker.setPopupContent(`🏍️ Posisi Mitra Titipuuy<br>Akurasi ±${Math.round(pos.coords.accuracy)} meter`);
+      mitraGpsMarker.setPopupContent(`🏍️ Posisi Mitra Titipuuy<br>Akurasi perangkat ±${Math.round(accuracy)} meter<br>Marker memakai perataan posisi ringan`);
       state.textContent='GPS aktif · posisi diperbarui';
-      label.textContent=`Akurasi ±${Math.round(pos.coords.accuracy)} meter`;
+      label.textContent=`Akurasi ±${Math.round(accuracy)} meter`;
+      const av=document.getElementById('gpsAccuracyValue'), q=document.getElementById('gpsQualityValue'), dot=document.getElementById('gpsQualityDot');
+      const cv=document.getElementById('gpsCoordinateValue'), uv=document.getElementById('gpsUpdatedValue');
+      if(av)av.textContent=`±${Math.round(accuracy)} m`;
+      const quality=accuracy<=10?'Sangat baik':accuracy<=25?'Baik':accuracy<=50?'Sedang':accuracy<=100?'Lemah':'Sangat lemah';
+      if(q)q.textContent=quality;
+      if(dot)dot.style.background=accuracy<=25?'#16a34a':accuracy<=50?'#d97706':'#dc2626';
+      if(cv)cv.textContent=`${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      if(uv)uv.textContent=new Date(now).toLocaleTimeString('id-ID');
     };
     const handleGpsError=(err)=>{
       state.textContent='GPS bermasalah';
