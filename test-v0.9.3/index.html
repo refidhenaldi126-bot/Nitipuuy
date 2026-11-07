@@ -37,7 +37,7 @@
     .mitra-map-locate{border:0;border-radius:999px;background:#fff0dc;color:#a94f08;padding:8px 12px;font-weight:850}
     .titipuuy-map-marker{background:transparent;border:0}
     /* v0.9.2: transparent rider mascot marker — no card/frame/background */
-    .titipuuy-map-marker .rider-mascot-img{display:block;width:60px;height:60px;object-fit:contain;object-position:center center;transform-origin:50% 97%;filter:drop-shadow(0 3px 4px rgba(35,20,10,.42));pointer-events:none}
+    .titipuuy-map-marker .rider-mascot-img{display:block;width:60px;height:60px;object-fit:contain;object-position:center center;transform-origin:50% 97%;transition:transform 260ms ease-out;filter:drop-shadow(0 3px 4px rgba(35,20,10,.42));pointer-events:none}
     .titipuuy-map-marker{width:60px!important;height:68px!important}
     .mitra-gps-diagnostics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 2px}
     .mitra-gps-metric{padding:8px 10px;border-radius:11px;background:#fff8ef;border:1px solid #f0e2d3;min-width:0}
@@ -1750,12 +1750,34 @@
   document.getElementById('routePickerClose').addEventListener('click',closeRoutePicker);
   </script>
   <script>
-  // Titipuuy v0.9.4: GPS diagnostics, accuracy radius and light position smoothing.
+  // Titipuuy v0.9.6: movement-gated compass + stabilized rider heading.
   let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null, mitraLastGpsPosition=null, mitraGpsAccuracyCircle=null;
   let mitraGpsAcceptedAt=0, mitraGpsFiltered=null, mitraDeviceHeading=null, mitraOrientationBound=false;
-  function setMitraHeading(deg){if(!Number.isFinite(deg))return;mitraDeviceHeading=((deg%360)+360)%360;const img=mitraGpsMarker?.getElement()?.querySelector('img');if(img)img.style.transform=`rotate(${mitraDeviceHeading}deg)`;}
-  function handleMitraOrientation(event){let heading=null;if(Number.isFinite(event.webkitCompassHeading))heading=event.webkitCompassHeading;else if(event.absolute===true&&Number.isFinite(event.alpha))heading=360-event.alpha;else if(Number.isFinite(event.alpha))heading=360-event.alpha;if(heading!==null)setMitraHeading(heading);}
-  async function enableMitraCompass(){try{if(typeof DeviceOrientationEvent==='undefined'){showToast('Sensor arah/kompas tidak tersedia di perangkat ini.');return;}if(typeof DeviceOrientationEvent.requestPermission==='function'){const permission=await DeviceOrientationEvent.requestPermission();if(permission!=='granted'){showToast('Izin sensor arah belum diberikan.');return;}}if(!mitraOrientationBound){window.addEventListener('deviceorientationabsolute',handleMitraOrientation,true);window.addEventListener('deviceorientation',handleMitraOrientation,true);mitraOrientationBound=true;}showToast('Sensor arah HP diaktifkan. Gerakkan HP perlahan untuk menguji arah maskot.');}catch(error){console.warn('Compass permission:',error);showToast('Sensor arah tidak dapat diaktifkan. Periksa izin sensor/peramban.');}}
+  let mitraIsMoving=false, mitraPreviousRawPoint=null, mitraCompassRawHeading=null, mitraLastHeadingUpdate=0;
+  const MITRA_MOVE_SPEED=0.8, MITRA_MOVE_DISTANCE=5, MITRA_HEADING_DEADBAND=5;
+  function angleDelta(from,to){return ((to-from+540)%360)-180;}
+  function setMitraHeading(deg, force=false){
+    if(!Number.isFinite(deg)||(!mitraIsMoving&&!force))return;
+    const target=((deg%360)+360)%360;
+    if(mitraDeviceHeading===null){mitraDeviceHeading=target;}else{
+      const delta=angleDelta(mitraDeviceHeading,target);
+      if(Math.abs(delta)<MITRA_HEADING_DEADBAND)return;
+      mitraDeviceHeading=(mitraDeviceHeading+delta*0.18+360)%360;
+    }
+    mitraLastHeadingUpdate=Date.now();
+    const img=mitraGpsMarker?.getElement()?.querySelector('img');
+    if(img)img.style.transform=`rotate(${mitraDeviceHeading}deg)`;
+  }
+  function handleMitraOrientation(event){
+    let heading=null;
+    if(Number.isFinite(event.webkitCompassHeading))heading=event.webkitCompassHeading;
+    else if(event.absolute===true&&Number.isFinite(event.alpha))heading=360-event.alpha;
+    if(heading===null)return;
+    mitraCompassRawHeading=((heading%360)+360)%360;
+    // Kompas hanya boleh mengubah orientasi saat ada pergerakan GPS yang terdeteksi.
+    if(mitraIsMoving)setMitraHeading(mitraCompassRawHeading);
+  }
+  async function enableMitraCompass(){try{if(typeof DeviceOrientationEvent==='undefined'){showToast('Sensor arah/kompas tidak tersedia di perangkat ini.');return;}if(typeof DeviceOrientationEvent.requestPermission==='function'){const permission=await DeviceOrientationEvent.requestPermission();if(permission!=='granted'){showToast('Izin sensor arah belum diberikan.');return;}}if(!mitraOrientationBound){window.addEventListener('deviceorientationabsolute',handleMitraOrientation,true);mitraOrientationBound=true;window.addEventListener('deviceorientation',handleMitraOrientation,true);}showToast('Kompas aktif. Maskot akan mengikuti arah saat GPS mendeteksi HP bergerak.');}catch(error){console.warn('Compass permission:',error);showToast('Sensor arah tidak dapat diaktifkan. Periksa izin sensor/peramban.');}}
   const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // initial viewport only; never treated as live location
   function initTitipuuyMitraMap(){
     const el=document.getElementById('mitraMap'); if(!el||!window.L)return;
@@ -1776,6 +1798,16 @@
     const updatePosition=(pos)=>{
       const lat=pos.coords.latitude, lng=pos.coords.longitude, accuracy=Number(pos.coords.accuracy)||9999;
       const now=pos.timestamp||Date.now();
+      // Deteksi gerak dari speed GPS dan perpindahan antarsampel, bukan dari kompas saja.
+      let movedMeters=0;
+      if(mitraPreviousRawPoint){
+        const rad=x=>x*Math.PI/180, dLat=rad(lat-mitraPreviousRawPoint.lat), dLng=rad(lng-mitraPreviousRawPoint.lng);
+        const h=Math.sin(dLat/2)**2+Math.cos(rad(mitraPreviousRawPoint.lat))*Math.cos(rad(lat))*Math.sin(dLng/2)**2;
+        movedMeters=6371000*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+      }
+      const gpsSpeed=Number.isFinite(pos.coords.speed)?pos.coords.speed:0;
+      mitraIsMoving=accuracy<=25&&(gpsSpeed>=MITRA_MOVE_SPEED||movedMeters>=MITRA_MOVE_DISTANCE);
+      mitraPreviousRawPoint={lat,lng,timestamp:now};
       // Tolak lonjakan koordinat yang tidak masuk akal; jangan menggeser marker ke titik yang jelas-jelas menyimpang.
       if(mitraGpsFiltered){
         const rad=x=>x*Math.PI/180;
@@ -1804,7 +1836,8 @@
       mitraGpsMarker.setLatLng(point);
       if(!mitraGpsAccuracyCircle)mitraGpsAccuracyCircle=L.circle([lat,lng],{radius:accuracy,color:'#f97316',weight:1,opacity:.65,fillColor:'#fb923c',fillOpacity:.10,interactive:false}).addTo(mitraLeafletMap);
       else mitraGpsAccuracyCircle.setLatLng([lat,lng]).setRadius(accuracy);
-      if(mitraDeviceHeading===null && Number.isFinite(pos.coords.heading) && (pos.coords.speed||0)>1.2)setMitraHeading(pos.coords.heading);
+      // Saat bergerak, prioritaskan course GPS (arah lintasan). Saat diam, tahan sudut terakhir.
+      if(mitraIsMoving && Number.isFinite(pos.coords.heading) && gpsSpeed>1.2)setMitraHeading(pos.coords.heading);
       mitraGpsMarker.setPopupContent(`🏍️ Posisi Mitra Titipuuy<br>Akurasi perangkat ±${Math.round(accuracy)} meter<br>Marker memakai perataan posisi ringan`);
       state.textContent='GPS aktif · posisi diperbarui';
       label.textContent=`Akurasi ±${Math.round(accuracy)} meter`;
