@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v0.8.2 — Session & Icon Fix</title>
+  <title>Titipuuy v0.9.0 — Map Navigation Foundation</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
     :root {
       --orange: #f98413;
@@ -24,6 +25,18 @@
       --radius-lg: 20px;
       --radius-md: 15px;
     }
+
+
+    /* Titipuuy v0.9.0 — Mitra Map Navigation Foundation */
+    .mitra-map-card{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:20px;padding:12px;margin:12px 0 16px;box-shadow:var(--shadow-small)}
+    .mitra-map-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 10px}
+    .mitra-map-top strong{font-size:.95rem}.mitra-map-top span{font-size:.72rem;color:var(--muted)}
+    #mitraMap{height:310px;width:100%;border-radius:15px;overflow:hidden;background:#eee8df;z-index:0}
+    .mitra-map-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px 1px;font-size:.75rem;color:var(--muted)}
+    .mitra-map-locate{border:0;border-radius:999px;background:#fff0dc;color:#a94f08;padding:8px 12px;font-weight:850}
+    .titipuuy-map-marker{background:transparent;border:0}.titipuuy-map-marker span{display:grid;place-items:center;width:42px;height:42px;border:3px solid #fff;border-radius:50%;background:linear-gradient(135deg,#f98413,#e96c08);box-shadow:0 3px 12px #5c321b66;font-size:23px}
+    .mitra-map-note{font-size:.7rem;color:var(--muted);margin:8px 2px 0;line-height:1.4}
+    @media(min-width:700px){#mitraMap{height:390px}}
 
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -729,6 +742,12 @@
 
     <section class="mitra-page" id="mitraPage">
       <div class="mitra-hero"><div class="mitra-hero-head"><div><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p></div><button type="button" class="mitra-switch" id="mitraPresenceSwitch" role="switch" aria-checked="false" aria-label="Ubah status operasional" title="Ubah status Online/Offline"><span class="mitra-switch-knob"></span></button></div><button class="mitra-toggle" id="switchBuyer" hidden>← Kembali ke Mode Pembeli</button></div>
+      <section class="mitra-map-card" aria-label="Peta navigasi Mitra">
+        <div class="mitra-map-top"><strong>🗺️ Peta perjalanan Mitra</strong><span id="mitraMapState">Menyiapkan peta…</span></div>
+        <div id="mitraMap" role="application" aria-label="Peta lokasi Mitra"></div>
+        <div class="mitra-map-foot"><span id="mitraMapLocation">Aktifkan GPS untuk melihat posisimu.</span><button type="button" class="mitra-map-locate" id="mitraMapLocate">◎ Lokasi saya</button></div>
+        <p class="mitra-map-note">Peta menggunakan OpenStreetMap. Penanda motor saat ini adalah ikon sementara; rute jemput–antar akan aktif setelah koordinat alamat tersedia pada data pesanan.</p>
+      </section>
       <div class="mitra-presence" id="mitraPresenceCard"><div class="mitra-presence-top"><span class="mitra-presence-label">Status operasional</span><span class="mitra-presence-state offline" id="mitraPresenceBadge">Offline</span></div><p id="mitraPresenceDescription">Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.</p><p class="mitra-presence-note" id="mitraPresenceNote">Status disimpan secara aman melalui server.</p></div><div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
       <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersinkron melalui Firebase secara realtime</p></div></div><div id="mitraOrderList"></div>
     </section>
@@ -929,8 +948,6 @@
       if(!out){out=document.createElement('button');out.id='firebaseSignOut';out.type='button';out.className='signout-btn';out.textContent='Keluar';topActions.appendChild(out);out.addEventListener('click',async()=>{try{await firebaseAuth.signOut();}catch(e){showToast(friendlyAuthError(e));}});}
     }
     function removeAccountControls(){document.getElementById('firebaseAccountChip')?.remove();document.getElementById('firebaseSignOut')?.remove();}
-    // Mode terakhir disimpan per akun (per UID) supaya tetap ada setelah logout lalu login lagi.
-    function setAccountMode(mode){const m=mode==='Mitra'?'Mitra':'Pembeli';localStorage.setItem('nitipuuy_account_mode',m);if(currentFirebaseUser&&currentFirebaseUser.uid){try{localStorage.setItem('nitipuuy_mode_'+currentFirebaseUser.uid,m);}catch{}}}
     try{
       if(!window.firebase || !firebase.initializeApp) throw new Error('Firebase SDK tidak berhasil dimuat. Periksa koneksi internet atau pemblokir konten.');
       if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -951,20 +968,20 @@
             updateWelcomeHeading({displayName:profile.name});
             // Pertahankan pilihan mode terakhir. Server tetap menjadi sumber kebenaran
             // untuk status persetujuan Mitra; kegagalan jaringan tidak boleh menghapus mode.
-            const savedAccountMode = localStorage.getItem('nitipuuy_mode_'+user.uid) || localStorage.getItem('nitipuuy_account_mode') || 'Pembeli';
+            const savedAccountMode = localStorage.getItem('nitipuuy_account_mode') || 'Pembeli';
             try {
               const token=await user.getIdToken(true);
               const statusResponse=await fetch('https://nitipuuy-api.refidhenaldi126.workers.dev/mitra/status',{headers:{'Authorization':`Bearer ${token}`}});
               const statusResult=await statusResponse.json();
               const isApproved=statusResponse.ok && statusResult.success===true && statusResult.status==='approved' && statusResult.role==='Mitra';
               if (!isApproved) {
-                setAccountMode('Pembeli');
+                localStorage.setItem('nitipuuy_account_mode','Pembeli');
               } else {
-                setAccountMode(savedAccountMode);
+                localStorage.setItem('nitipuuy_account_mode',savedAccountMode==='Mitra'?'Mitra':'Pembeli');
               }
             } catch(roleError) {
               console.warn('Status Mitra server sementara tidak dapat diperiksa; mempertahankan mode terakhir:',roleError);
-              setAccountMode(savedAccountMode);
+              localStorage.setItem('nitipuuy_account_mode',savedAccountMode==='Mitra'?'Mitra':'Pembeli');
             }
             if(!cloud.profile) await ref.child('profile').set({name:profile.name,email:profile.email,photoURL:user.photoURL||'',phone:profile.phone||'',updatedAt:firebase.database.ServerValue.TIMESTAMP});
             // Jangan pernah membuat atau mengubah role dari frontend.
@@ -980,7 +997,7 @@
           else navigateTo('Beranda');
           startOrderListeners();
         }else{
-          setAccountMode('Pembeli');
+          localStorage.setItem('nitipuuy_account_mode','Pembeli');
           updateWelcomeHeading(null);
           authGate.hidden=false; removeAccountControls();
         }
@@ -1176,23 +1193,13 @@
       {id:'NT-2026-003',date:'30 Okt 2026 • 12.05',name:'Burger Beef Cheese',place:'Burger Corner',emoji:'🍔',total:35000,status:'Selesai',note:'Pesanan telah diterima.',steps:['Pesanan dibuat','Mitra menerima pesanan','Pesanan diantar','Pesanan selesai']}
     ];
     let activeOrderFilter = 'Semua';
-    function orderCancelHtml(order){
-      if(!order||!order._key)return '';
-      const age=Date.now()-Number(order.createdAt||0);
-      const key=escapeHtml(order._key);
-      if(order.status==='Menunggu mitra'&&age<15*60*1000)
-        return `<button type="button" class="chat-action-btn" data-cancel-order="${key}">Batalkan pesanan</button><small class="checkout-muted">Kamu dapat membatalkan selama pesanan belum diterima Mitra. Jika belum ada Mitra dalam 15 menit, pesanan berakhir otomatis.</small>`;
-      if(['Diterima','Disiapkan'].includes(order.status)&&age>=10*60*1000)
-        return `<button type="button" class="chat-action-btn" data-cancel-order="${key}">Batalkan pesanan</button><small class="checkout-muted">Pesanan sudah lebih dari 10 menit dan belum diantar, jadi kamu boleh membatalkannya.</small>`;
-      return '';
-    }
     function renderOrders() {
       const list = document.getElementById('orderList');
       const realOrders = allBuyerOrders(); const allOrders = currentFirebaseUser ? realOrders : [...demoOrders];
       const filtered = allOrders.filter(order => activeOrderFilter === 'Semua' || order.status === activeOrderFilter);
       list.innerHTML = filtered.length ? filtered.map(order => {
         const statusClass = order.status === 'Selesai' ? 'done' : '';
-        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button>${orderCancelHtml(order)}${order.mitraUid && order._key ? `<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(order._key)}">💬 Chat Mitra</button>` : ''}</div></article>`;
+        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button>${order.status==='Menunggu mitra'&&order._key&&Date.now()-Number(order.createdAt||0)<15*60*1000?`<button type="button" class="chat-action-btn" data-cancel-order="${escapeHtml(order._key)}">Batalkan pesanan</button><small class="checkout-muted">Kamu dapat membatalkan sebelum 15 menit. Setelah itu pesanan berakhir otomatis jika belum diterima Mitra.</small>`:''}${order.mitraUid && order._key ? `<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(order._key)}">💬 Chat Mitra</button>` : ''}</div></article>`;
       }).join('') : `<div class="orders-empty"><div class="empty-emoji">🛍️</div><strong>Belum ada pesanan ${activeOrderFilter.toLowerCase()}</strong><p>Pesanan dengan status ini akan muncul di sini.</p></div>`;
       list.querySelectorAll('[data-order-detail]').forEach(button => button.addEventListener('click', () => {
         const order = allOrders.find(item => item.id === button.dataset.orderDetail);
@@ -1210,7 +1217,7 @@
     function getRealOrders(){try{const v=JSON.parse(localStorage.getItem(ORDER_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return [];}}
     function saveRealOrders(items){localStorage.setItem(ORDER_KEY,JSON.stringify(items));}
     function allBuyerOrders(){return cloudBuyerOrders.length?cloudBuyerOrders:getRealOrders();}
-    let orderSyncTimer=null, lastOrderStates={}, mitraSyncError='';
+    let orderSyncTimer=null, lastOrderStates={};
     function noteOrderChanges(rows,side){
       for(const o of rows){const key=o._key||o.id;const state=String(o.status||'');const cacheKey=side+':'+key;const old=lastOrderStates[cacheKey];
         if(old && old!==state)pushLocalNotification(cacheKey+':'+state,`Status pesanan ${o.id||''} berubah`,state==='Diterima'?'Mitra telah menerima pesanan.':`Status terbaru: ${state}.`,o.id);else if(!old&&side==='mitra'&&!o.mitraUid&&state==='Menunggu mitra')pushLocalNotification(cacheKey+':new','Pesanan baru tersedia',`${o.id||'Pesanan'} menunggu Mitra menerima.`,o.id);
@@ -1223,12 +1230,12 @@
         if(localStorage.getItem(ROLE_KEY)==='Mitra'){
           const data=await callNitipuuyApi('/mitra/orders',{method:'GET'});
           const all=data.orders||[];cloudBoardOrders=all.filter(o=>!o.mitraUid);cloudMitraOrders=all.filter(o=>o.mitraUid===currentFirebaseUser.uid);
-          noteOrderChanges(all,'mitra');mitraSyncError='';renderMitraDashboard();
+          noteOrderChanges(all,'mitra');renderMitraDashboard();
         }else{
           const data=await callNitipuuyApi('/orders/mine',{method:'GET'});
           const rows=data.orders||[];noteOrderChanges(rows,'buyer');cloudBuyerOrders=rows;saveRealOrders(rows);renderOrders();renderProfile();
         }
-      }catch(err){console.warn('Sinkronisasi pesanan melalui Worker gagal:',err);if(localStorage.getItem(ROLE_KEY)==='Mitra'){mitraSyncError=(err&&err.message)||'Koneksi ke server bermasalah.';renderMitraDashboard();}}
+      }catch(err){console.warn('Sinkronisasi pesanan melalui Worker gagal:',err);}
     }
     function startOrderListeners(){
       if(!currentFirebaseUser)return;
@@ -1236,15 +1243,11 @@
       if(orderSyncTimer)clearInterval(orderSyncTimer);
       orderSyncTimer=setInterval(syncOrderData,8000);
     }
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncOrderData();});
-    window.addEventListener('online',()=>syncOrderData());
     function loadMitraPrivateOrders(){syncOrderData();}
     let mitraPresenceState='offline';
     let mitraPresenceBusy=false;
     function paintMitraPresence(state, busy=false){
-      const prevPresence=mitraPresenceState+'|'+mitraPresenceBusy;
       mitraPresenceState=state==='online'?'online':'offline';mitraPresenceBusy=Boolean(busy);
-      const presenceChanged=prevPresence!==(mitraPresenceState+'|'+mitraPresenceBusy);
       const badge=document.getElementById('mitraPresenceBadge');
       const desc=document.getElementById('mitraPresenceDescription');
       const note=document.getElementById('mitraPresenceNote');
@@ -1261,7 +1264,6 @@
       toggle.disabled=busy;
       if(switchBuyer)switchBuyer.hidden=busy||mitraPresenceState!=='offline';
       note.textContent=busy?'Status Offline tidak tersedia selama masih ada pesanan aktif.':'Status operasional tersimpan melalui server.';
-      if(presenceChanged&&localStorage.getItem(ROLE_KEY)==='Mitra')renderMitraDashboard();
     }
     async function refreshMitraPresence(){
       if(localStorage.getItem(ROLE_KEY)!=='Mitra'||!currentFirebaseUser)return;
@@ -1272,7 +1274,7 @@
       if(!['online','offline'].includes(state))return;
       const toggle=document.getElementById('mitraPresenceSwitch');
       if(toggle)toggle.disabled=true;
-      try{const data=await callNitipuuyApi('/mitra/availability',{method:'POST',body:JSON.stringify({state})});paintMitraPresence(data.state,data.busy);showToast(state==='online'?'Kamu sekarang Online dan siap menerima pesanan.':'Kamu sekarang Offline.');syncOrderData();}
+      try{const data=await callNitipuuyApi('/mitra/availability',{method:'POST',body:JSON.stringify({state})});paintMitraPresence(data.state,data.busy);showToast(state==='online'?'Kamu sekarang Online dan siap menerima pesanan.':'Kamu sekarang Offline.');}
       catch(error){showToast(error.message||'Status Mitra gagal diperbarui.');await refreshMitraPresence();}
       finally{if(toggle)toggle.disabled=document.getElementById('mitraPresenceBadge')?.textContent==='Sibuk';}
     }
@@ -1280,12 +1282,8 @@
       if(mitraPresenceState==='online')setMitraPresence('offline');
       else if(mitraPresenceState==='offline')setMitraPresence('online');
     });
-    function mitraNoticeHtml(waitingCount){
-      if(mitraSyncError)return `<div class="mitra-empty">⚠️<br><b>Pesanan belum bisa dimuat</b><p>${escapeHtml(mitraSyncError)}</p></div>`;
-      if(mitraPresenceState!=='online'&&!mitraPresenceBusy&&waitingCount>0)return `<div class="mitra-empty">🔔<br><b>${waitingCount} pesanan menunggu Mitra</b><p>Aktifkan status Online untuk melihat dan menerima pesanan.</p></div>`;
-      return '';
-    }
     function renderMitraDashboard(){
+      setTimeout(initTitipuuyMitraMap,80);
       const role=localStorage.getItem(ROLE_KEY)||'Pembeli';if(role!=='Mitra')return;
       const presenceSwitch=document.getElementById('mitraPresenceSwitch');if(presenceSwitch){presenceSwitch.hidden=false;presenceSwitch.style.display='block';}
       refreshMitraPresence();
@@ -1294,9 +1292,8 @@
       const done=cloudMitraOrders.filter(o=>/selesai/i.test(o.status||''));
       document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
       const list=document.getElementById('mitraOrderList');
-      const waitingCount=cloudBoardOrders.filter(o=>!o.mitraUid&&o.status==='Menunggu mitra').length;
       const cards=[...incoming.map(o=>({...o,_incoming:true})),...cloudMitraOrders];
-      list.innerHTML=mitraNoticeHtml(waitingCount)+(cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<div class="mitra-complete-slider" role="button" tabindex="0" aria-label="Tahan 3 detik lalu geser ke kanan untuk menyelesaikan pesanan" data-complete-slider data-id="${escapeHtml(o._key)}"><span class="complete-thumb" aria-hidden="true">➜</span><span class="complete-label">Tahan 3 detik, lalu geser</span></div>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div>${!o._incoming?`<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(o._key)}">💬 Chat Pembeli</button>`:''}</article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini secara otomatis.</p></div>');
+      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<div class="mitra-complete-slider" role="button" tabindex="0" aria-label="Tahan 3 detik lalu geser ke kanan untuk menyelesaikan pesanan" data-complete-slider data-id="${escapeHtml(o._key)}"><span class="complete-thumb" aria-hidden="true">➜</span><span class="complete-label">Tahan 3 detik, lalu geser</span></div>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div>${!o._incoming?`<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(o._key)}">💬 Chat Pembeli</button>`:''}</article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
       list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));list.querySelectorAll('[data-open-chat]').forEach(btn=>btn.addEventListener('click',()=>openOrderChat(btn.dataset.openChat,'mitra')));
       bindCompleteSliders(list);
     }
@@ -1403,7 +1400,7 @@
       const button=document.getElementById('switchBuyer'); button.disabled=true;
       try {
         if(!await canMitraSwitchToBuyer())return;
-        setAccountMode('Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif.');
+        localStorage.setItem(ROLE_KEY,'Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif.');
       }
       catch(error){ console.warn('Gagal mengganti role:',error); showToast('Mode tidak berubah. Silakan coba lagi.'); }
       finally { button.disabled=false; }
@@ -1629,7 +1626,7 @@
           openProfileForm('Pilih mode akun',
             `<div class="role-intro">Pendaftaran Mitra kamu sudah disetujui. Pilih ruang kerja yang ingin digunakan.</div>
              <label class="profile-choice role-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}><span>🛍️ <b>Mode Pembeli</b><small>Cari layanan dan buat pesanan.</small></span></label>
-             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;setAccountMode(chosen);setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);showToast(`Mode ${chosen} aktif.`);});
+             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;localStorage.setItem(ROLE_KEY,chosen);setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);showToast(`Mode ${chosen} aktif.`);});
           return;
         }
         if(applicationStatus==='pending'){
@@ -1697,5 +1694,30 @@
     }
   </script>
 <!-- Firebase Rules v2.0 disertakan dalam catatan rilis; jangan membuka orders ke semua pengguna. -->
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+  // Titipuuy v0.9.0: peta dasar Mitra. Tidak mengubah API Worker / status pesanan.
+  let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null;
+  const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // area Purwakarta; hanya titik awal peta, bukan lokasi pengguna
+  function initTitipuuyMitraMap(){
+    const el=document.getElementById('mitraMap'); if(!el||!window.L)return;
+    if(!mitraLeafletMap){
+      mitraLeafletMap=L.map(el,{zoomControl:true}).setView(TITIPUUY_MAP_DEFAULT,13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(mitraLeafletMap);
+      const motor=L.divIcon({className:'titipuuy-map-marker',html:'<span aria-label="Posisi Mitra">🛵</span>',iconSize:[42,42],iconAnchor:[21,21]});
+      mitraGpsMarker=L.marker(TITIPUUY_MAP_DEFAULT,{icon:motor}).addTo(mitraLeafletMap).bindPopup('Posisi Mitra (titik awal peta)');
+    }
+    setTimeout(()=>mitraLeafletMap.invalidateSize(),180);
+    const locate=()=>{const state=document.getElementById('mitraMapState'),label=document.getElementById('mitraMapLocation');
+      if(!navigator.geolocation){state.textContent='GPS tidak didukung';label.textContent='Perangkat tidak menyediakan GPS.';return;}
+      state.textContent='Meminta izin GPS…';
+      navigator.geolocation.getCurrentPosition(pos=>{const p=[pos.coords.latitude,pos.coords.longitude];mitraGpsMarker.setLatLng(p).bindPopup('🛵 Posisi Mitra saat ini');mitraLeafletMap.setView(p,16);state.textContent='Lokasi GPS aktif';label.textContent=`Akurasi sekitar ${Math.round(pos.coords.accuracy)} meter`;},err=>{state.textContent='GPS belum aktif';label.textContent=err.code===1?'Izin lokasi ditolak. Aktifkan izin lokasi browser.':'Lokasi belum dapat dibaca. Periksa GPS dan koneksi.';},{enableHighAccuracy:true,timeout:12000,maximumAge:10000});
+    };
+    const btn=document.getElementById('mitraMapLocate'); if(btn&&btn.dataset.bound!=='1'){btn.dataset.bound='1';btn.addEventListener('click',locate);}
+    if(!mitraLeafletMap._titipuuyAutoLocate){mitraLeafletMap._titipuuyAutoLocate=true;locate();}
+  }
+  </script>
+
 </body>
 </html>
