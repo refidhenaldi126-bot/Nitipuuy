@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v0.9.0 — Map Navigation Foundation</title>
+  <title>Titipuuy v0.9.1 — Rider Navigation</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
     :root {
@@ -27,14 +27,17 @@
     }
 
 
-    /* Titipuuy v0.9.0 — Mitra Map Navigation Foundation */
+    /* Titipuuy v0.9.1 — Rider Navigation */
     .mitra-map-card{background:#fff;border:1px solid rgba(128,84,62,.12);border-radius:20px;padding:12px;margin:12px 0 16px;box-shadow:var(--shadow-small)}
     .mitra-map-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 10px}
     .mitra-map-top strong{font-size:.95rem}.mitra-map-top span{font-size:.72rem;color:var(--muted)}
     #mitraMap{height:310px;width:100%;border-radius:15px;overflow:hidden;background:#eee8df;z-index:0}
     .mitra-map-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px 1px;font-size:.75rem;color:var(--muted)}
     .mitra-map-locate{border:0;border-radius:999px;background:#fff0dc;color:#a94f08;padding:8px 12px;font-weight:850}
-    .titipuuy-map-marker{background:transparent;border:0}.titipuuy-map-marker span{display:grid;place-items:center;width:42px;height:42px;border:3px solid #fff;border-radius:50%;background:linear-gradient(135deg,#f98413,#e96c08);box-shadow:0 3px 12px #5c321b66;font-size:23px}
+    .titipuuy-map-marker{background:transparent;border:0}
+    .titipuuy-map-marker .rider-marker-frame{width:68px;height:68px;border:3px solid #fff;border-radius:18px;overflow:hidden;background:#f98413;box-shadow:0 4px 15px rgba(45,25,12,.42);position:relative}
+    .titipuuy-map-marker img{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;transform-origin:center center}
+    .titipuuy-map-marker .rider-marker-pin{position:absolute;left:50%;bottom:-9px;width:14px;height:14px;background:#f98413;border:3px solid #fff;border-radius:50%;transform:translateX(-50%);box-shadow:0 2px 5px #0004}
     .mitra-map-note{font-size:.7rem;color:var(--muted);margin:8px 2px 0;line-height:1.4}
     @media(min-width:700px){#mitraMap{height:390px}}
 
@@ -743,10 +746,10 @@
     <section class="mitra-page" id="mitraPage">
       <div class="mitra-hero"><div class="mitra-hero-head"><div><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p></div><button type="button" class="mitra-switch" id="mitraPresenceSwitch" role="switch" aria-checked="false" aria-label="Ubah status operasional" title="Ubah status Online/Offline"><span class="mitra-switch-knob"></span></button></div><button class="mitra-toggle" id="switchBuyer" hidden>← Kembali ke Mode Pembeli</button></div>
       <section class="mitra-map-card" aria-label="Peta navigasi Mitra">
-        <div class="mitra-map-top"><strong>🗺️ Peta perjalanan Mitra</strong><span id="mitraMapState">Menyiapkan peta…</span></div>
+        <div class="mitra-map-top"><strong>🗺️ Navigasi Mitra</strong><span id="mitraMapState">Menyiapkan peta…</span></div>
         <div id="mitraMap" role="application" aria-label="Peta lokasi Mitra"></div>
         <div class="mitra-map-foot"><span id="mitraMapLocation">Aktifkan GPS untuk melihat posisimu.</span><button type="button" class="mitra-map-locate" id="mitraMapLocate">◎ Lokasi saya</button></div>
-        <p class="mitra-map-note">Peta menggunakan OpenStreetMap. Penanda motor saat ini adalah ikon sementara; rute jemput–antar akan aktif setelah koordinat alamat tersedia pada data pesanan.</p>
+        <p class="mitra-map-note">Maskot motor Titipuuy menandai posisi GPS Mitra. Marker diperbarui otomatis saat lokasi bergerak; rute pesanan akan diaktifkan setelah koordinat jemput dan antar tersedia.</p>
       </section>
       <div class="mitra-presence" id="mitraPresenceCard"><div class="mitra-presence-top"><span class="mitra-presence-label">Status operasional</span><span class="mitra-presence-state offline" id="mitraPresenceBadge">Offline</span></div><p id="mitraPresenceDescription">Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.</p><p class="mitra-presence-note" id="mitraPresenceNote">Status disimpan secara aman melalui server.</p></div><div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
       <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersinkron melalui Firebase secara realtime</p></div></div><div id="mitraOrderList"></div>
@@ -1697,25 +1700,59 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-  // Titipuuy v0.9.0: peta dasar Mitra. Tidak mengubah API Worker / status pesanan.
-  let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null;
-  const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // area Purwakarta; hanya titik awal peta, bukan lokasi pengguna
+  // Titipuuy v0.9.1: live GPS rider marker. Worker/API/order flows remain untouched.
+  let mitraLeafletMap=null, mitraGpsMarker=null, mitraGpsWatch=null, mitraLastGpsPosition=null;
+  const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // initial viewport only; never treated as live location
   function initTitipuuyMitraMap(){
     const el=document.getElementById('mitraMap'); if(!el||!window.L)return;
     if(!mitraLeafletMap){
       mitraLeafletMap=L.map(el,{zoomControl:true}).setView(TITIPUUY_MAP_DEFAULT,13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(mitraLeafletMap);
-      const motor=L.divIcon({className:'titipuuy-map-marker',html:'<span aria-label="Posisi Mitra">🛵</span>',iconSize:[42,42],iconAnchor:[21,21]});
-      mitraGpsMarker=L.marker(TITIPUUY_MAP_DEFAULT,{icon:motor}).addTo(mitraLeafletMap).bindPopup('Posisi Mitra (titik awal peta)');
+      const riderIcon=L.divIcon({
+        className:'titipuuy-map-marker',
+        html:'<div class="rider-marker-frame"><img src="titipuuy-rider-mascot.jpg" alt="Maskot Mitra Titipuuy"><i class="rider-marker-pin"></i></div>',
+        iconSize:[68,78],iconAnchor:[34,70]
+      });
+      mitraGpsMarker=L.marker(TITIPUUY_MAP_DEFAULT,{icon:riderIcon}).addTo(mitraLeafletMap).bindPopup('🏍️ Maskot Mitra Titipuuy · menunggu GPS');
     }
     setTimeout(()=>mitraLeafletMap.invalidateSize(),180);
-    const locate=()=>{const state=document.getElementById('mitraMapState'),label=document.getElementById('mitraMapLocation');
-      if(!navigator.geolocation){state.textContent='GPS tidak didukung';label.textContent='Perangkat tidak menyediakan GPS.';return;}
-      state.textContent='Meminta izin GPS…';
-      navigator.geolocation.getCurrentPosition(pos=>{const p=[pos.coords.latitude,pos.coords.longitude];mitraGpsMarker.setLatLng(p).bindPopup('🛵 Posisi Mitra saat ini');mitraLeafletMap.setView(p,16);state.textContent='Lokasi GPS aktif';label.textContent=`Akurasi sekitar ${Math.round(pos.coords.accuracy)} meter`;},err=>{state.textContent='GPS belum aktif';label.textContent=err.code===1?'Izin lokasi ditolak. Aktifkan izin lokasi browser.':'Lokasi belum dapat dibaca. Periksa GPS dan koneksi.';},{enableHighAccuracy:true,timeout:12000,maximumAge:10000});
+
+    const state=document.getElementById('mitraMapState');
+    const label=document.getElementById('mitraMapLocation');
+    const updatePosition=(pos)=>{
+      const lat=pos.coords.latitude, lng=pos.coords.longitude;
+      const point=[lat,lng];
+      mitraLastGpsPosition={lat,lng,accuracy:pos.coords.accuracy,heading:pos.coords.heading,timestamp:pos.timestamp};
+      mitraGpsMarker.setLatLng(point);
+      const img=mitraGpsMarker.getElement()?.querySelector('img');
+      if(img && Number.isFinite(pos.coords.heading)) img.style.transform=`rotate(${pos.coords.heading}deg)`;
+      mitraGpsMarker.setPopupContent(`🏍️ Posisi Mitra Titipuuy<br>Akurasi ±${Math.round(pos.coords.accuracy)} meter`);
+      state.textContent='GPS aktif · posisi diperbarui';
+      label.textContent=`Akurasi ±${Math.round(pos.coords.accuracy)} meter`;
     };
-    const btn=document.getElementById('mitraMapLocate'); if(btn&&btn.dataset.bound!=='1'){btn.dataset.bound='1';btn.addEventListener('click',locate);}
-    if(!mitraLeafletMap._titipuuyAutoLocate){mitraLeafletMap._titipuuyAutoLocate=true;locate();}
+    const handleGpsError=(err)=>{
+      state.textContent='GPS bermasalah';
+      label.textContent=err.code===1?'Izin lokasi ditolak. Aktifkan izin lokasi browser.':err.code===3?'GPS terlalu lama merespons. Coba lagi.':'Lokasi belum dapat dibaca. Periksa GPS dan koneksi.';
+    };
+    const locate=()=>{
+      if(!navigator.geolocation){state.textContent='GPS tidak didukung';label.textContent='Perangkat tidak menyediakan GPS.';return;}
+      if(mitraLastGpsPosition){
+        mitraLeafletMap.setView([mitraLastGpsPosition.lat,mitraLastGpsPosition.lng],17);
+        return;
+      }
+      state.textContent='Mengaktifkan GPS…';
+      if(mitraGpsWatch===null){
+        mitraGpsWatch=navigator.geolocation.watchPosition(updatePosition,handleGpsError,{
+          enableHighAccuracy:true,timeout:20000,maximumAge:3000
+        });
+      }
+    };
+    const btn=document.getElementById('mitraMapLocate');
+    if(btn&&btn.dataset.bound!=='1'){btn.dataset.bound='1';btn.addEventListener('click',()=>{
+      if(mitraLastGpsPosition) mitraLeafletMap.setView([mitraLastGpsPosition.lat,mitraLastGpsPosition.lng],17);
+      else locate();
+    });}
+    if(mitraGpsWatch===null) locate();
   }
   </script>
 
