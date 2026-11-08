@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f98413" />
+  <meta name="theme-color" content="#ffffff" />
   <title>Titipuuy v0.9.8 — Mitra Fullscreen Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
@@ -759,7 +759,42 @@
   body:has(.mitra-page.active) .mitra-page.active { max-width: 1180px; margin: auto; }
 }
 
-  </style>
+  
+/* v0.9.8.1 — fullscreen map overlay spacing fix */
+@media (max-width: 900px) {
+  body:has(.mitra-page.active) .mitra-gps-diagnostics {
+    display: none !important; /* GPS diagnostics remain available to scripts, but do not cover the map */
+  }
+  body:has(.mitra-page.active) .mitra-stats {
+    bottom: calc(270px + env(safe-area-inset-bottom));
+    z-index: 1101;
+  }
+  body:has(.mitra-page.active) .mitra-map-foot {
+    bottom: calc(40vh + 16px);
+    right: 14px;
+  }
+  body:has(.mitra-page.active) #mitraMapLocate {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0 !important;
+    display: grid;
+    place-items: center;
+  }
+  body:has(.mitra-page.active) #mitraMapLocate::before {
+    content: "◎";
+    font-size: 27px;
+    line-height: 1;
+  }
+  body:has(.mitra-page.active) .mitra-presence {
+    max-height: 27dvh;
+    overflow-y: auto;
+  }
+}
+</style>
 
     <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=082">
   <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png?v=082">
