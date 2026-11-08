@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f98413" />
-  <title>Titipuuy v0.9.5 — Mitra Gojek Style</title>
+  <title>Titipuuy v0.9.8 — Mitra Fullscreen Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
     :root {
@@ -564,75 +564,201 @@
 @media(prefers-reduced-motion:no-preference){.mitra-complete-slider{transition:background .2s,border-color .2s}.mitra-complete-slider .complete-thumb{transition:transform .08s linear}}
 .notification-count{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:#d83b2f;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;border:2px solid #fff}.icon-button{position:relative}
 
-    /* Titipuuy v0.9.5 — Mitra ala Gojek */
-    .mitra-page{--gj-blue:#1f6fd1;--gj-blue-dark:#165aae;--gj-line:#eceff1;--gj-text:#1d2327;--gj-muted:#7b858c}
-    .gj-map-wrap{position:relative;margin:0 0 -24px}
-    .gj-map-wrap #mitraMap{height:clamp(270px,50vh,440px);border-radius:0 0 26px 26px;margin:0}
-    .gj-map-wrap .leaflet-control-zoom{display:none}
-    .gj-topbar{position:absolute;z-index:700;top:12px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
-    .gj-topbar>*{pointer-events:auto}
-    .gj-topbar .mitra-toggle{margin:0;background:#fff;color:var(--gj-text);font-weight:800;box-shadow:0 3px 12px rgba(0,0,0,.18)}
-    .gj-pill{margin-left:auto;display:flex;align-items:center;gap:9px;background:#fff;border-radius:999px;padding:5px 6px 5px 14px;box-shadow:0 3px 12px rgba(0,0,0,.18)}
-    .gj-pill-label{font-weight:900;font-size:.8rem;color:var(--gj-text)}
-    .gj-pill .mitra-switch{margin:0;background:#c7ccd0;border-color:#b3b9be;box-shadow:inset 0 2px 5px rgba(0,0,0,.18);backdrop-filter:none;-webkit-backdrop-filter:none}
-    .gj-pill .mitra-switch.is-online{background:#19b34a;border-color:#128f3a}
-    .gj-mapstate{position:absolute;z-index:690;left:50%;top:62px;transform:translateX(-50%);max-width:86%;background:rgba(255,255,255,.94);border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:700;color:var(--gj-muted);box-shadow:0 2px 8px rgba(0,0,0,.14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .gj-fabs{position:absolute;z-index:700;right:12px;bottom:40px;display:flex;flex-direction:column;gap:10px}
-    .gj-fab{width:46px;height:46px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.22);font-size:1.25rem;color:var(--gj-blue);font-weight:900}
-    .gj-sheet{position:relative;z-index:710;background:#fff;border-radius:26px 26px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.12);padding:10px 16px 110px;min-height:240px}
-    .gj-handle{width:42px;height:5px;border-radius:5px;background:#d5d9dc;margin:2px auto 14px}
-    .gj-sheet .mitra-presence{box-shadow:none;border:1px solid var(--gj-line);border-radius:14px;margin:0 0 10px;padding:12px}
-    .gj-sheet .mitra-stats{margin:0 0 12px}
-    .gj-sheet .mitra-stat{box-shadow:none;border:1px solid var(--gj-line);background:#f8fafb;padding:10px 6px}
-    .gj-section-title{font-weight:900;font-size:1rem;color:var(--gj-text);margin:14px 0 10px}
-    .gj-order{border:1px solid var(--gj-line);border-radius:16px;padding:14px;margin:0 0 12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.05)}
-    .gj-order-top{display:flex;align-items:center;gap:11px}
-    .gj-ico{flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:#e8334a;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
-    .gj-ico-grey{background:#aab2b8}
-    .gj-order-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-    .gj-order-title b{font-size:.95rem;color:var(--gj-text)}
-    .gj-order-title small{color:var(--gj-muted);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .gj-chip{align-self:flex-start;display:inline-block;padding:3px 9px;border-radius:7px;font-size:.7rem;font-weight:800;border:1px solid}
-    .gj-chip.ok{background:#e6f7ea;color:#0a8a2f;border-color:#8fd7a1}
-    .gj-chip.new{background:#fff3df;color:#b86400;border-color:#f3c98a}
-    .gj-chip.go{background:#e8f1fd;color:#1558b0;border-color:#9ec2f0}
-    .gj-chip.done{background:#eef1f3;color:#5b666d;border-color:#d4dade}
-    .gj-chip.off{background:#fdecec;color:#b3261e;border-color:#f2b8b5}
-    .gj-icon-btn{flex:0 0 40px;width:40px;height:40px;border-radius:50%;border:1px solid var(--gj-line);background:#fff;font-size:1.05rem}
-    .gj-hist{padding:10px 12px;box-shadow:none;background:#fafbfb}
-    .gj-hist .gj-ico{width:34px;height:34px;flex-basis:34px;font-size:.95rem}
-    .gj-hist .gj-chip{align-self:center}
-    .gj-order-name{margin:12px 0 0;font-size:.84rem;color:var(--gj-text);line-height:1.45}
-    .gj-two{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--gj-line);border-bottom:1px solid var(--gj-line);margin:12px -14px 0}
-    .gj-two button{background:none;border:0;padding:13px 6px;font-weight:700;font-size:.82rem;color:#2b3338;display:flex;flex-direction:column;align-items:center;gap:6px}
-    .gj-two button+button{border-left:1px solid var(--gj-line)}
-    .gj-two button.on{color:var(--gj-blue)}
-    .gj-gi{font-size:1.25rem}
-    .gj-panel{margin:0 -14px;padding:12px 14px;background:#f8fafb;border-bottom:1px solid var(--gj-line);font-size:.8rem;color:#2b3338;line-height:1.5}
-    .gj-panel[hidden]{display:none}
-    .gj-panel ul{list-style:none;margin:0;padding:0}
-    .gj-panel li{display:flex;justify-content:space-between;gap:10px;padding:4px 0}
-    .gj-panel li span{font-weight:800;white-space:nowrap}
-    .gj-row{display:flex;align-items:center;gap:10px;padding:13px 2px;border-bottom:1px solid var(--gj-line);font-size:.84rem;color:#2b3338}
-    .gj-row .gj-ri{width:22px;text-align:center}
-    .gj-row .gj-rl{flex:1}
-    .gj-row b{color:var(--gj-text)}
-    .gj-link{display:block;width:100%;margin:6px 0 0;padding:10px;border:0;background:none;color:var(--gj-blue);font-weight:800;font-size:.82rem}
-    .gj-cta{margin-top:10px}
-    .gj-order.gj-active .gj-cta{position:sticky;bottom:78px;background:#fff;padding:10px 0 2px;z-index:6}
-    .gj-primary{display:flex;align-items:stretch;width:100%;min-height:52px;padding:0;border:0;border-radius:10px;background:var(--gj-blue);color:#fff;font-weight:900;letter-spacing:.04em;font-size:.88rem;overflow:hidden;box-shadow:0 4px 12px rgba(31,111,209,.35)}
-    .gj-primary::before{content:"➜";display:flex;align-items:center;justify-content:center;flex:0 0 54px;background:var(--gj-blue-dark);font-size:1.2rem}
-    .gj-primary span{flex:1;display:flex;align-items:center;justify-content:center;padding:0 12px}
-    .gj-primary:active{transform:translateY(1px)}
-    .gj-order .mitra-complete-slider{margin:0}
-    .gj-empty,.gj-notice{text-align:center;color:var(--gj-muted);padding:22px 12px;font-size:.85rem;line-height:1.55;border:1px dashed #d5dadd;border-radius:14px;margin:0 0 12px}
-    .gj-empty b,.gj-notice b{display:block;color:var(--gj-text);font-size:.95rem;margin:6px 0 4px}
-    .gj-notice{background:#fff8ec;border-color:#f3c98a;padding:12px}
-    .gj-gps{margin-top:14px;border:1px solid var(--gj-line);border-radius:14px;padding:10px 12px;background:#fafbfb}
-    .gj-gps summary{font-weight:800;font-size:.82rem;cursor:pointer}
-    .gj-gps .mitra-map-foot{padding-top:8px}
-    .gj-num-wrap{background:none;border:0}
-    .gj-num{width:30px;height:30px;border-radius:50%;background:#f59a0c;color:#fff;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+/* =========================================================
+   TITIPUUY v0.9.8 — MITRA FULLSCREEN MAP UI
+   Visual layer only; existing GPS/order/chat logic retained.
+   ========================================================= */
+@media (max-width: 900px) {
+  body:has(.mitra-page.active) {
+    background: #eef1f4;
+    overflow-x: hidden;
+  }
+  body:has(.mitra-page.active) .app-shell {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 calc(18px + env(safe-area-inset-bottom));
+  }
+  body:has(.mitra-page.active) .topbar,
+  body:has(.mitra-page.active) .bottom-nav {
+    display: none !important;
+  }
+  body:has(.mitra-page.active) .mitra-page.active {
+    display: block;
+    min-height: 100dvh;
+    padding: 0;
+    margin: 0;
+  }
+  body:has(.mitra-page.active) .mitra-hero {
+    position: fixed;
+    z-index: 1102;
+    top: calc(8px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 18px;
+    color: var(--brown);
+    background: rgba(255,255,255,.94);
+    box-shadow: 0 5px 22px rgba(28,35,43,.16);
+    backdrop-filter: blur(14px);
+  }
+  body:has(.mitra-page.active) .mitra-hero-head {
+    align-items: center;
+    gap: 8px;
+  }
+  body:has(.mitra-page.active) .mitra-hero .eyebrow,
+  body:has(.mitra-page.active) .mitra-hero p,
+  body:has(.mitra-page.active) .mitra-hero h1 {
+    display: none;
+  }
+  body:has(.mitra-page.active) .mitra-hero-head:before {
+    content: "Titipuuy Mitra";
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--brown);
+    margin-right: auto;
+  }
+  body:has(.mitra-page.active) .mitra-switch {
+    flex: 0 0 auto;
+    min-width: 108px;
+  }
+  body:has(.mitra-page.active) .mitra-toggle { display: none !important; }
+
+  body:has(.mitra-page.active) .mitra-map-card {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #e8edf0;
+    box-shadow: none;
+  }
+  body:has(.mitra-page.active) .mitra-map-top,
+  body:has(.mitra-page.active) .mitra-map-note,
+  body:has(.mitra-page.active) .mitra-route-summary {
+    display: none !important;
+  }
+  body:has(.mitra-page.active) #mitraMap {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100dvh !important;
+    min-height: 100dvh;
+    border-radius: 0;
+    z-index: 1;
+  }
+  body:has(.mitra-page.active) .mitra-map-foot {
+    position: absolute;
+    z-index: 500;
+    right: 14px;
+    bottom: calc(40vh + 16px);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+  }
+  body:has(.mitra-page.active) #mitraMapLocation,
+  body:has(.mitra-page.active) #mitraCompassEnable {
+    display: none !important;
+  }
+  body:has(.mitra-page.active) .mitra-map-foot > div {
+    pointer-events: auto;
+    display: flex !important;
+    flex-direction: column;
+    gap: 9px !important;
+  }
+  body:has(.mitra-page.active) .mitra-map-locate {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: #1769aa;
+    box-shadow: 0 4px 16px rgba(20,40,60,.2);
+    font-size: 1.15rem;
+  }
+  body:has(.mitra-page.active) .mitra-gps-diagnostics {
+    position: fixed;
+    z-index: 1101;
+    left: 12px;
+    bottom: calc(40vh + 16px);
+    width: min(190px, 48vw);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin: 0;
+  }
+  body:has(.mitra-page.active) .mitra-gps-metric {
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 2px 9px rgba(20,40,60,.10);
+  }
+  body:has(.mitra-page.active) .mitra-gps-metric b { font-size: .7rem; }
+  body:has(.mitra-page.active) .mitra-gps-metric small { font-size: .56rem; }
+
+  body:has(.mitra-page.active) .mitra-presence,
+  body:has(.mitra-page.active) .mitra-stats,
+  body:has(.mitra-page.active) .mitra-page > .section-heading,
+  body:has(.mitra-page.active) #mitraOrderList {
+    position: relative;
+    z-index: 1100;
+  }
+  body:has(.mitra-page.active) .mitra-presence {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    max-height: 39dvh;
+    overflow: auto;
+    margin: 0;
+    padding: 14px;
+    border: 1px solid rgba(70,80,90,.12);
+    border-radius: 22px;
+    background: rgba(255,255,255,.97);
+    box-shadow: 0 8px 28px rgba(25,35,45,.20);
+    backdrop-filter: blur(16px);
+  }
+  body:has(.mitra-page.active) .mitra-presence p,
+  body:has(.mitra-page.active) .mitra-presence-note {
+    margin-top: 5px;
+    margin-bottom: 0;
+    font-size: .72rem;
+  }
+  body:has(.mitra-page.active) .mitra-stats {
+    position: fixed;
+    z-index: 1101;
+    left: 12px;
+    right: 12px;
+    bottom: calc(42dvh + 8px);
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 7px;
+    margin: 0;
+  }
+  body:has(.mitra-page.active) .mitra-stat {
+    padding: 8px 5px;
+    text-align: center;
+    border-radius: 13px;
+    background: rgba(255,255,255,.93);
+    box-shadow: 0 3px 12px rgba(20,40,60,.12);
+  }
+  body:has(.mitra-page.active) .mitra-stat b { font-size: 1rem; }
+  body:has(.mitra-page.active) .mitra-stat small { font-size: .62rem; }
+  body:has(.mitra-page.active) .mitra-page > .section-heading,
+  body:has(.mitra-page.active) #mitraOrderList {
+    display: none;
+  }
+}
+@media (min-width: 901px) {
+  body:has(.mitra-page.active) .mitra-page.active { max-width: 1180px; margin: auto; }
+}
+
   </style>
 
     <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=082">
@@ -830,34 +956,22 @@
     </section>
 
     <section class="mitra-page" id="mitraPage">
-      <div class="gj-map-wrap">
+      <div class="mitra-hero"><div class="mitra-hero-head"><div><div class="eyebrow">RUANG KERJA MITRA</div><h1>Halo, Mitra! 🛵</h1><p>Kelola pesanan masuk dan perjalanan titipanmu dari sini.</p></div><button type="button" class="mitra-switch" id="mitraPresenceSwitch" role="switch" aria-checked="false" aria-label="Ubah status operasional" title="Ubah status Online/Offline"><span class="mitra-switch-knob"></span></button></div><button class="mitra-toggle" id="switchBuyer" hidden>← Kembali ke Mode Pembeli</button></div>
+      <section class="mitra-map-card" aria-label="Peta navigasi Mitra">
+        <div class="mitra-map-top"><strong>🗺️ Navigasi Mitra</strong><span id="mitraMapState">Menyiapkan peta…</span></div>
         <div id="mitraMap" role="application" aria-label="Peta lokasi Mitra"></div>
-        <div class="gj-topbar">
-          <button class="mitra-toggle" id="switchBuyer" hidden>← Mode Pembeli</button>
-          <div class="gj-pill"><span class="gj-pill-label" id="gjPillLabel">Offline</span><button type="button" class="mitra-switch" id="mitraPresenceSwitch" role="switch" aria-checked="false" aria-label="Ubah status operasional" title="Ubah status Online/Offline"><span class="mitra-switch-knob"></span></button></div>
-        </div>
-        <div class="gj-mapstate"><span id="mitraMapState">Menyiapkan peta…</span></div>
-        <div class="gj-fabs">
-          <button type="button" class="gj-fab" id="mitraCompassEnable" aria-label="Arah HP" title="Arah HP">🧭</button>
-          <button type="button" class="gj-fab" id="mitraMapLocate" aria-label="Lokasi saya" title="Lokasi saya">◎</button>
-        </div>
-      </div>
-      <div class="gj-sheet">
-        <div class="gj-handle"></div>
-        <div class="mitra-presence" id="mitraPresenceCard"><div class="mitra-presence-top"><span class="mitra-presence-label">Status operasional</span><span class="mitra-presence-state offline" id="mitraPresenceBadge">Offline</span></div><p id="mitraPresenceDescription">Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.</p><p class="mitra-presence-note" id="mitraPresenceNote">Status disimpan secara aman melalui server.</p></div><div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
-        <div class="mitra-route-summary" id="mitraRouteSummary" aria-live="polite"><h4 id="mitraRouteTitle">Pratinjau rute pesanan</h4><div class="mitra-route-stats"><div><b id="routeLegOne">—</b><small>Mitra → Toko</small></div><div><b id="routeLegTwo">—</b><small>Toko → Pembeli</small></div><div><b id="routeTotal">—</b><small>Total perjalanan</small></div></div><p class="mitra-route-caption" id="mitraRouteCaption">Pilih pesanan untuk melihat rute.</p></div>
-        <div class="gj-section-title">Pesanan</div>
-        <div id="mitraOrderList"></div>
-        <details class="gj-gps"><summary>📡 Diagnostik GPS</summary>
-          <div class="mitra-map-foot"><span id="mitraMapLocation">Aktifkan GPS untuk melihat posisimu.</span></div>
-          <div class="mitra-gps-diagnostics" aria-live="polite">
+        <div class="mitra-map-foot"><span id="mitraMapLocation">Aktifkan GPS untuk melihat posisimu.</span><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="mitra-map-locate" id="mitraCompassEnable">🧭 Arah HP</button><button type="button" class="mitra-map-locate" id="mitraMapLocate">◎ Lokasi saya</button></div></div>
+        <div class="mitra-gps-diagnostics" aria-live="polite">
           <div class="mitra-gps-metric"><b id="gpsAccuracyValue">—</b><small>Akurasi GPS perangkat</small></div>
           <div class="mitra-gps-metric"><b class="mitra-gps-quality"><i class="mitra-gps-dot" id="gpsQualityDot"></i><span id="gpsQualityValue">Menunggu GPS</span></b><small>Kualitas pembacaan</small></div>
           <div class="mitra-gps-metric"><b id="gpsCoordinateValue">—</b><small>Koordinat GPS terakhir</small></div>
           <div class="mitra-gps-metric"><b id="gpsUpdatedValue">—</b><small>Pembaruan terakhir</small></div>
         </div>
-        </details>
-      </div>
+        <div class="mitra-route-summary" id="mitraRouteSummary" aria-live="polite"><h4 id="mitraRouteTitle">Pratinjau rute pesanan</h4><div class="mitra-route-stats"><div><b id="routeLegOne">—</b><small>Mitra → Toko</small></div><div><b id="routeLegTwo">—</b><small>Toko → Pembeli</small></div><div><b id="routeTotal">—</b><small>Total perjalanan</small></div></div><p class="mitra-route-caption" id="mitraRouteCaption">Pilih pesanan untuk melihat rute.</p></div>
+        <p class="mitra-map-note">Maskot motor Titipuuy menandai posisi GPS Mitra. Marker diperbarui otomatis saat lokasi bergerak; rute pesanan akan diaktifkan setelah koordinat jemput dan antar tersedia.</p>
+      </section>
+      <div class="mitra-presence" id="mitraPresenceCard"><div class="mitra-presence-top"><span class="mitra-presence-label">Status operasional</span><span class="mitra-presence-state offline" id="mitraPresenceBadge">Offline</span></div><p id="mitraPresenceDescription">Kamu sedang tidak menerima pesanan baru. Aktifkan status Online saat siap bekerja.</p><p class="mitra-presence-note" id="mitraPresenceNote">Status disimpan secara aman melalui server.</p></div><div class="mitra-stats"><div class="mitra-stat"><b id="mitraIncomingCount">0</b><small>Pesanan masuk</small></div><div class="mitra-stat"><b id="mitraActiveCount">0</b><small>Pesanan aktif</small></div><div class="mitra-stat"><b id="mitraDoneCount">0</b><small>Selesai</small></div></div>
+      <div class="section-heading"><div><h2>Pesanan untuk Mitra</h2><p>Pesanan tersinkron melalui Firebase secara realtime</p></div></div><div id="mitraOrderList"></div>
     </section>
 
     <section class="profile-page" id="profilePage">
@@ -1057,8 +1171,6 @@
       if(!out){out=document.createElement('button');out.id='firebaseSignOut';out.type='button';out.className='signout-btn';out.textContent='Keluar';topActions.appendChild(out);out.addEventListener('click',async()=>{try{await firebaseAuth.signOut();}catch(e){showToast(friendlyAuthError(e));}});}
     }
     function removeAccountControls(){document.getElementById('firebaseAccountChip')?.remove();document.getElementById('firebaseSignOut')?.remove();}
-    // Mode terakhir disimpan per akun (per UID) supaya tetap ada setelah logout lalu login lagi.
-    function setAccountMode(mode){const m=mode==='Mitra'?'Mitra':'Pembeli';localStorage.setItem('nitipuuy_account_mode',m);if(currentFirebaseUser&&currentFirebaseUser.uid){try{localStorage.setItem('nitipuuy_mode_'+currentFirebaseUser.uid,m);}catch{}}}
     try{
       if(!window.firebase || !firebase.initializeApp) throw new Error('Firebase SDK tidak berhasil dimuat. Periksa koneksi internet atau pemblokir konten.');
       if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -1079,20 +1191,20 @@
             updateWelcomeHeading({displayName:profile.name});
             // Pertahankan pilihan mode terakhir. Server tetap menjadi sumber kebenaran
             // untuk status persetujuan Mitra; kegagalan jaringan tidak boleh menghapus mode.
-            const savedAccountMode = localStorage.getItem('nitipuuy_mode_'+user.uid) || localStorage.getItem('nitipuuy_account_mode') || 'Pembeli';
+            const savedAccountMode = localStorage.getItem('nitipuuy_account_mode') || 'Pembeli';
             try {
               const token=await user.getIdToken(true);
               const statusResponse=await fetch('https://nitipuuy-api.refidhenaldi126.workers.dev/mitra/status',{headers:{'Authorization':`Bearer ${token}`}});
               const statusResult=await statusResponse.json();
               const isApproved=statusResponse.ok && statusResult.success===true && statusResult.status==='approved' && statusResult.role==='Mitra';
               if (!isApproved) {
-                setAccountMode('Pembeli');
+                localStorage.setItem('nitipuuy_account_mode','Pembeli');
               } else {
-                setAccountMode(savedAccountMode);
+                localStorage.setItem('nitipuuy_account_mode',savedAccountMode==='Mitra'?'Mitra':'Pembeli');
               }
             } catch(roleError) {
               console.warn('Status Mitra server sementara tidak dapat diperiksa; mempertahankan mode terakhir:',roleError);
-              setAccountMode(savedAccountMode);
+              localStorage.setItem('nitipuuy_account_mode',savedAccountMode==='Mitra'?'Mitra':'Pembeli');
             }
             if(!cloud.profile) await ref.child('profile').set({name:profile.name,email:profile.email,photoURL:user.photoURL||'',phone:profile.phone||'',updatedAt:firebase.database.ServerValue.TIMESTAMP});
             // Jangan pernah membuat atau mengubah role dari frontend.
@@ -1108,7 +1220,7 @@
           else navigateTo('Beranda');
           startOrderListeners();
         }else{
-          setAccountMode('Pembeli');
+          localStorage.setItem('nitipuuy_account_mode','Pembeli');
           updateWelcomeHeading(null);
           authGate.hidden=false; removeAccountControls();
         }
@@ -1312,23 +1424,13 @@
       {id:'NT-2026-003',date:'30 Okt 2026 • 12.05',name:'Burger Beef Cheese',place:'Burger Corner',emoji:'🍔',total:35000,status:'Selesai',note:'Pesanan telah diterima.',steps:['Pesanan dibuat','Mitra menerima pesanan','Pesanan diantar','Pesanan selesai']}
     ];
     let activeOrderFilter = 'Semua';
-    function orderCancelHtml(order){
-      if(!order||!order._key)return '';
-      const age=Date.now()-Number(order.createdAt||0);
-      const key=escapeHtml(order._key);
-      if(order.status==='Menunggu mitra'&&age<15*60*1000)
-        return `<button type="button" class="chat-action-btn" data-cancel-order="${key}">Batalkan pesanan</button><small class="checkout-muted">Kamu dapat membatalkan selama pesanan belum diterima Mitra. Jika belum ada Mitra dalam 15 menit, pesanan berakhir otomatis.</small>`;
-      if(['Diterima','Disiapkan'].includes(order.status)&&age>=10*60*1000)
-        return `<button type="button" class="chat-action-btn" data-cancel-order="${key}">Batalkan pesanan</button><small class="checkout-muted">Pesanan sudah lebih dari 10 menit dan belum diantar, jadi kamu boleh membatalkannya.</small>`;
-      return '';
-    }
     function renderOrders() {
       const list = document.getElementById('orderList');
       const realOrders = allBuyerOrders(); const allOrders = currentFirebaseUser ? realOrders : [...demoOrders];
       const filtered = allOrders.filter(order => activeOrderFilter === 'Semua' || order.status === activeOrderFilter);
       list.innerHTML = filtered.length ? filtered.map(order => {
         const statusClass = order.status === 'Selesai' ? 'done' : '';
-        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button>${orderCancelHtml(order)}${order.mitraUid && order._key ? `<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(order._key)}">💬 Chat Mitra</button>` : ''}</div></article>`;
+        return `<article class="order-card"><div class="order-top"><span class="order-code">${order.id}</span><span class="order-status ${statusClass}">● ${order.status}</span></div><div class="order-main"><div class="order-emoji">${order.emoji}</div><div><h3>${order.name}</h3><p>${order.place} · ${order.date}</p></div></div><div class="order-bottom"><div class="order-total"><small>Total pembayaran</small><strong>${rupiah(order.total)}</strong></div><button type="button" class="detail-button" data-order-detail="${order.id}">Detail pesanan</button>${order.status==='Menunggu mitra'&&order._key&&Date.now()-Number(order.createdAt||0)<15*60*1000?`<button type="button" class="chat-action-btn" data-cancel-order="${escapeHtml(order._key)}">Batalkan pesanan</button><small class="checkout-muted">Kamu dapat membatalkan sebelum 15 menit. Setelah itu pesanan berakhir otomatis jika belum diterima Mitra.</small>`:''}${order.mitraUid && order._key ? `<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(order._key)}">💬 Chat Mitra</button>` : ''}</div></article>`;
       }).join('') : `<div class="orders-empty"><div class="empty-emoji">🛍️</div><strong>Belum ada pesanan ${activeOrderFilter.toLowerCase()}</strong><p>Pesanan dengan status ini akan muncul di sini.</p></div>`;
       list.querySelectorAll('[data-order-detail]').forEach(button => button.addEventListener('click', () => {
         const order = allOrders.find(item => item.id === button.dataset.orderDetail);
@@ -1359,12 +1461,12 @@
         if(localStorage.getItem(ROLE_KEY)==='Mitra'){
           const data=await callNitipuuyApi('/mitra/orders',{method:'GET'});
           const all=data.orders||[];cloudBoardOrders=all.filter(o=>!o.mitraUid);cloudMitraOrders=all.filter(o=>o.mitraUid===currentFirebaseUser.uid);
-          noteOrderChanges(all,'mitra');mitraSyncError='';renderMitraDashboard();
+          noteOrderChanges(all,'mitra');renderMitraDashboard();
         }else{
           const data=await callNitipuuyApi('/orders/mine',{method:'GET'});
           const rows=data.orders||[];noteOrderChanges(rows,'buyer');cloudBuyerOrders=rows;saveRealOrders(rows);renderOrders();renderProfile();
         }
-      }catch(err){console.warn('Sinkronisasi pesanan melalui Worker gagal:',err);if(localStorage.getItem(ROLE_KEY)==='Mitra'){mitraSyncError=(err&&err.message)||'Koneksi ke server bermasalah.';renderMitraDashboard();}}
+      }catch(err){console.warn('Sinkronisasi pesanan melalui Worker gagal:',err);}
     }
     function startOrderListeners(){
       if(!currentFirebaseUser)return;
@@ -1372,15 +1474,11 @@
       if(orderSyncTimer)clearInterval(orderSyncTimer);
       orderSyncTimer=setInterval(syncOrderData,8000);
     }
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncOrderData();});
-    window.addEventListener('online',()=>syncOrderData());
     function loadMitraPrivateOrders(){syncOrderData();}
     let mitraPresenceState='offline';
     let mitraPresenceBusy=false;
     function paintMitraPresence(state, busy=false){
-      const prevPresence=mitraPresenceState+'|'+mitraPresenceBusy;
       mitraPresenceState=state==='online'?'online':'offline';mitraPresenceBusy=Boolean(busy);
-      const presenceChanged=prevPresence!==(mitraPresenceState+'|'+mitraPresenceBusy);
       const badge=document.getElementById('mitraPresenceBadge');
       const desc=document.getElementById('mitraPresenceDescription');
       const note=document.getElementById('mitraPresenceNote');
@@ -1397,7 +1495,6 @@
       toggle.disabled=busy;
       if(switchBuyer)switchBuyer.hidden=busy||mitraPresenceState!=='offline';
       note.textContent=busy?'Status Offline tidak tersedia selama masih ada pesanan aktif.':'Status operasional tersimpan melalui server.';
-      if(presenceChanged&&localStorage.getItem(ROLE_KEY)==='Mitra')renderMitraDashboard();
     }
     async function refreshMitraPresence(){
       if(localStorage.getItem(ROLE_KEY)!=='Mitra'||!currentFirebaseUser)return;
@@ -1408,7 +1505,7 @@
       if(!['online','offline'].includes(state))return;
       const toggle=document.getElementById('mitraPresenceSwitch');
       if(toggle)toggle.disabled=true;
-      try{const data=await callNitipuuyApi('/mitra/availability',{method:'POST',body:JSON.stringify({state})});paintMitraPresence(data.state,data.busy);showToast(state==='online'?'Kamu sekarang Online dan siap menerima pesanan.':'Kamu sekarang Offline.');syncOrderData();}
+      try{const data=await callNitipuuyApi('/mitra/availability',{method:'POST',body:JSON.stringify({state})});paintMitraPresence(data.state,data.busy);showToast(state==='online'?'Kamu sekarang Online dan siap menerima pesanan.':'Kamu sekarang Offline.');}
       catch(error){showToast(error.message||'Status Mitra gagal diperbarui.');await refreshMitraPresence();}
       finally{if(toggle)toggle.disabled=document.getElementById('mitraPresenceBadge')?.textContent==='Sibuk';}
     }
@@ -1416,73 +1513,6 @@
       if(mitraPresenceState==='online')setMitraPresence('offline');
       else if(mitraPresenceState==='offline')setMitraPresence('online');
     });
-    let mitraSyncError='';const gjEta={};const gjOpenPanels=new Set();let gjAutoRouteKey='';
-    function gjStatusInfo(status,incoming){
-      if(incoming)return{chip:'Pesanan baru',cls:'new',action:'accept',label:'TERIMA PESANAN',active:false};
-      if(/diterima/i.test(status))return{chip:'Menuju toko',cls:'go',action:'prepare',label:'MULAI SIAPKAN',active:true};
-      if(/disiapkan/i.test(status))return{chip:'Sudah dibeli',cls:'ok',action:'deliver',label:'MULAI PENGANTARAN',active:true};
-      if(/perjalanan/i.test(status))return{chip:'Mengantar',cls:'go',action:'complete',label:'',active:true};
-      if(/selesai/i.test(status))return{chip:'Selesai',cls:'done',action:'',active:false};
-      return{chip:status||'—',cls:'off',action:'',active:false};
-    }
-    function gjSortOrders(cards){
-      const rank=o=>{const i=gjStatusInfo(o.status||'',o._incoming);return i.active?0:(o._incoming?1:2);};
-      const sorted=[...cards].sort((a,b)=>rank(a)-rank(b)||(Number(b.createdAt)||0)-(Number(a.createdAt)||0));
-      let hist=0;return sorted.filter(o=>rank(o)<2||++hist<=5);
-    }
-    function gjOrderCard(o){
-      const status=o.status||'Menunggu mitra';const info=gjStatusInfo(status,o._incoming);const key=escapeHtml(o._key);
-      if(!info.active&&!o._incoming){
-        return `<article class="gj-order gj-hist"><div class="gj-order-top"><div class="gj-ico gj-ico-grey">🛍️</div><div class="gj-order-title"><b>Pesanan ${escapeHtml(o.id||'')}</b><small>${escapeHtml(o.name||'')}</small></div><span class="gj-chip ${info.cls}">${escapeHtml(info.chip)}</span></div></article>`;
-      }
-      const a=o.address&&o.address.detail?o.address:null;
-      const addrHtml=a?`<b>${escapeHtml(a.name||'Pembeli')}</b>${a.phone?' · '+escapeHtml(a.phone):''}<br>${escapeHtml(a.detail)}${a.note?'<br><small>Catatan: '+escapeHtml(a.note)+'</small>':''}`:`Toko: <b>${escapeHtml(o.place||'—')}</b><br><small>Alamat lengkap pembeli tampil setelah pesanan diterima.</small>`;
-      const itemsHtml=Array.isArray(o.items)&&o.items.length?o.items.map(i=>`<li><div>${escapeHtml(i.name||'Barang')} × ${Number(i.qty)||1}</div><span>${rupiah((Number(i.price)||0)*(Number(i.qty)||1))}</span></li>`).join(''):`<li><div>${escapeHtml(o.name||'Pesanan')}</div></li>`;
-      const open=n=>gjOpenPanels.has(o._key+'|'+n);
-      const cta=info.action==='complete'
-        ?`<div class="mitra-complete-slider" role="button" tabindex="0" aria-label="Tahan 3 detik lalu geser ke kanan untuk menyelesaikan pesanan" data-complete-slider data-id="${key}"><span class="complete-thumb" aria-hidden="true">➜</span><span class="complete-label">Tahan 3 detik, lalu geser</span></div>`
-        :`<button type="button" class="gj-primary" data-mitra-action="${info.action}" data-id="${key}"><span>${info.label}</span></button>`;
-      const eta=gjEta[o._key]?'± '+gjEta[o._key]:'—';
-      return `<article class="gj-order ${info.active?'gj-active':''}">
-        <div class="gj-order-top"><div class="gj-ico">🛍️</div><div class="gj-order-title"><b>Pesanan ${escapeHtml(o.id||'')}</b><span class="gj-chip ${info.cls}">${escapeHtml(info.chip)}</span></div>${!o._incoming?`<button type="button" class="gj-icon-btn" data-open-chat="${key}" aria-label="Chat pembeli">💬</button>`:''}</div>
-        <div class="gj-order-name">${escapeHtml(o.name||'Pesanan')}</div>
-        <div class="gj-two"><button type="button" data-gj-panel="addr" class="${open('addr')?'on':''}"><span class="gj-gi">📍</span>Lihat alamat</button><button type="button" data-gj-panel="det" class="${open('det')?'on':''}"><span class="gj-gi">🧺</span>Lihat detail pesanan</button></div>
-        <div class="gj-panel" data-panel="addr" ${open('addr')?'':'hidden'}>${addrHtml}</div>
-        <div class="gj-panel" data-panel="det" ${open('det')?'':'hidden'}><ul>${itemsHtml}</ul></div>
-        <div class="gj-row"><span class="gj-ri">🕒</span><span class="gj-rl">Estimasi perjalanan</span><b data-eta="${key}">${eta}</b></div>
-        <div class="gj-row"><span class="gj-ri">💵</span><span class="gj-rl">Tagihan tunai (COD)</span><b>${rupiah(o.total||0)}</b></div>
-        <button type="button" class="gj-link" data-show-route="${key}">🗺️ Lihat rute di peta</button>
-        <div class="gj-cta">${cta}</div>
-      </article>`;
-    }
-    function gjEmptyHtml(){
-      if(mitraPresenceState!=='online')return '<div class="gj-empty">🛵<b>Kamu sedang Offline</b>Geser saklar di pojok peta untuk mulai menerima pesanan.</div>';
-      return '<div class="gj-empty">📦<b>Menunggu pesanan masuk</b>Pesanan pembeli akan muncul di sini otomatis.</div>';
-    }
-    function gjNoticeHtml(waitingCount){
-      if(mitraSyncError)return `<div class="gj-notice">⚠️<b>Pesanan belum bisa dimuat</b>${escapeHtml(mitraSyncError)}</div>`;
-      if(mitraPresenceState!=='online'&&waitingCount>0)return `<div class="gj-notice">🔔<b>${waitingCount} pesanan menunggu Mitra</b>Aktifkan status Online untuk melihat dan menerima pesanan.</div>`;
-      return '';
-    }
-    function bindGjCards(root){
-      root.querySelectorAll('[data-gj-panel]').forEach(btn=>btn.addEventListener('click',()=>{
-        const card=btn.closest('.gj-order');const name=btn.dataset.gjPanel;const panel=card.querySelector('.gj-panel[data-panel="'+name+'"]');
-        const key=card.querySelector('[data-show-route]')?.dataset.showRoute||'';const willOpen=panel.hidden;
-        card.querySelectorAll('.gj-panel').forEach(p=>{p.hidden=true;});card.querySelectorAll('[data-gj-panel]').forEach(x=>x.classList.remove('on'));
-        gjOpenPanels.delete(key+'|addr');gjOpenPanels.delete(key+'|det');
-        if(willOpen){panel.hidden=false;btn.classList.add('on');gjOpenPanels.add(key+'|'+name);}
-      }));
-    }
-    function gjAutoRoute(){
-      try{
-        if(!window.L||!mitraLeafletMap||!mitraLastGpsPosition)return;
-        const act=cloudMitraOrders.find(o=>/diterima|disiapkan|perjalanan/i.test(o.status||''));if(!act)return;
-        const phase=/perjalanan/i.test(act.status||'')?'delivery':'pickup';const sig=act._key+'|'+phase;
-        if(gjAutoRouteKey===sig)return;
-        if(!routePoint(act.pickupPoint)||!routePoint((act.address&&act.address.point)||act.deliveryPreviewPoint))return;
-        gjAutoRouteKey=sig;showMitraOrderRoute(act._key,false);
-      }catch(e){/* peta belum siap */}
-    }
     function renderMitraDashboard(){
       setTimeout(initTitipuuyMitraMap,80);
       const role=localStorage.getItem(ROLE_KEY)||'Pembeli';if(role!=='Mitra')return;
@@ -1494,11 +1524,9 @@
       document.getElementById('mitraIncomingCount').textContent=incoming.length;document.getElementById('mitraActiveCount').textContent=active.length;document.getElementById('mitraDoneCount').textContent=done.length;
       const list=document.getElementById('mitraOrderList');
       const cards=[...incoming.map(o=>({...o,_incoming:true})),...cloudMitraOrders];
-      if(list.querySelector('.mitra-complete-slider.is-holding,.mitra-complete-slider.is-ready,.mitra-complete-slider.is-complete'))return;
-      const waitingCount=cloudBoardOrders.filter(o=>!o.mitraUid&&o.status==='Menunggu mitra').length;
-      list.innerHTML=gjNoticeHtml(waitingCount)+(cards.length?gjSortOrders(cards).map(gjOrderCard).join(''):gjEmptyHtml());
+      list.innerHTML=cards.length?cards.map(o=>{const status=o.status||'Menunggu mitra';let actions='';if(o._incoming)actions=`<button data-mitra-action="accept" data-id="${escapeHtml(o._key)}">Terima</button>`;else if(/diterima/i.test(status))actions=`<button data-mitra-action="prepare" data-id="${escapeHtml(o._key)}">Mulai siapkan</button>`;else if(/disiapkan/i.test(status))actions=`<button data-mitra-action="deliver" data-id="${escapeHtml(o._key)}">Mulai antar</button>`;else if(/perjalanan/i.test(status))actions=`<div class="mitra-complete-slider" role="button" tabindex="0" aria-label="Tahan 3 detik lalu geser ke kanan untuk menyelesaikan pesanan" data-complete-slider data-id="${escapeHtml(o._key)}"><span class="complete-thumb" aria-hidden="true">➜</span><span class="complete-label">Tahan 3 detik, lalu geser</span></div>`;return `<article class="mitra-order-card"><div class="mitra-order-head"><b>${escapeHtml(o.id)}</b><span>${escapeHtml(status)}</span></div><h3>${escapeHtml(o.name||'Pesanan')}</h3><p>📍 ${escapeHtml(o.place||'Lokasi akan tampil setelah diterima')}</p><p>💵 ${rupiah(o.total||0)} · Tunai (COD)</p><div class="mitra-order-actions">${actions||'<button disabled style="opacity:.55">Tidak ada tindakan</button>'}</div><button type="button" class="mitra-route-btn" data-show-route="${escapeHtml(o._key)}">🗺️ Lihat pratinjau rute</button>${!o._incoming?`<button type="button" class="chat-action-btn" data-open-chat="${escapeHtml(o._key)}">💬 Chat Pembeli</button>`:''}</article>`}).join(''):'<div class="mitra-empty">📦<br><b>Belum ada pesanan masuk</b><p>Pesanan pembeli akan tampil di sini setelah tersinkron ke Firebase.</p></div>';
       list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));list.querySelectorAll('[data-open-chat]').forEach(btn=>btn.addEventListener('click',()=>openOrderChat(btn.dataset.openChat,'mitra')));list.querySelectorAll('[data-show-route]').forEach(btn=>btn.addEventListener('click',()=>showMitraOrderRoute(btn.dataset.showRoute)));
-      bindCompleteSliders(list);bindGjCards(list);setTimeout(gjAutoRoute,300);
+      bindCompleteSliders(list);
     }
     function bindCompleteSliders(root){
       root.querySelectorAll('[data-complete-slider]').forEach(slider=>{
@@ -1603,7 +1631,7 @@
       const button=document.getElementById('switchBuyer'); button.disabled=true;
       try {
         if(!await canMitraSwitchToBuyer())return;
-        setAccountMode('Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif.');
+        localStorage.setItem(ROLE_KEY,'Pembeli'); renderProfile(); navigateTo('Beranda'); showToast('Mode Pembeli aktif.');
       }
       catch(error){ console.warn('Gagal mengganti role:',error); showToast('Mode tidak berubah. Silakan coba lagi.'); }
       finally { button.disabled=false; }
@@ -1637,7 +1665,7 @@
       });
     }
     // Role tidak boleh ditulis dari frontend. Perubahan role Mitra hanya melalui Worker setelah persetujuan Admin.
-    const NITIPUUY_API = 'https://nitipuuy-api.refidhenaldi126.workers.dev';
+    const NITIPUUY_API = 'https://nitipuuy-api-dev.refidhenaldi126.workers.dev';
     async function callNitipuuyApi(path, options={}) {
       if(!currentFirebaseUser) throw new Error('Silakan login kembali.');
       const token=await currentFirebaseUser.getIdToken(true);
@@ -1829,7 +1857,7 @@
           openProfileForm('Pilih mode akun',
             `<div class="role-intro">Pendaftaran Mitra kamu sudah disetujui. Pilih ruang kerja yang ingin digunakan.</div>
              <label class="profile-choice role-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}><span>🛍️ <b>Mode Pembeli</b><small>Cari layanan dan buat pesanan.</small></span></label>
-             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;setAccountMode(chosen);setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);showToast(`Mode ${chosen} aktif.`);});
+             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;localStorage.setItem(ROLE_KEY,chosen);setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);showToast(`Mode ${chosen} aktif.`);});
           return;
         }
         if(applicationStatus==='pending'){
@@ -2069,20 +2097,17 @@
     try{
       const first=await getRoadLeg(rider,pickup);const second=await getRoadLeg(pickup,delivery);
       const firstCoords=first.geometry.coordinates.map(c=>[c[1],c[0]]),secondCoords=second.geometry.coordinates.map(c=>[c[1],c[0]]);
-      const leg1=L.polyline(firstCoords,{color:'#f08a00',weight:6,opacity:.95}).addTo(mitraLeafletMap);
-      const leg2=L.polyline(secondCoords,{color:'#f08a00',weight:6,opacity:.95}).addTo(mitraLeafletMap);
-      const gjNum=n=>L.divIcon({className:'gj-num-wrap',html:'<div class="gj-num">'+n+'</div>',iconSize:[30,30],iconAnchor:[15,15]});
-      const markers=[L.marker(pickup,{icon:gjNum(1)}).addTo(mitraLeafletMap).bindPopup('🏪 Lokasi toko'),L.marker(delivery,{icon:gjNum(2)}).addTo(mitraLeafletMap).bindPopup(order.address?.point?'🏠 Tujuan pembeli':'📍 Perkiraan tujuan pembeli')];
+      const leg1=L.polyline(firstCoords,{color:'#e78b36',weight:5,opacity:.9}).addTo(mitraLeafletMap);
+      const leg2=L.polyline(secondCoords,{color:'#328b72',weight:5,opacity:.9,dashArray:'8 7'}).addTo(mitraLeafletMap);
+      const markers=[L.marker(rider).addTo(mitraLeafletMap).bindPopup('🏍️ Posisi Mitra'),L.marker(pickup).addTo(mitraLeafletMap).bindPopup('🏪 Lokasi toko'),L.marker(delivery).addTo(mitraLeafletMap).bindPopup(order.address?.point?'🏠 Tujuan pembeli':'📍 Perkiraan tujuan pembeli')];
       mitraRouteLayers=[leg1,leg2,...markers];
       document.getElementById('routeLegOne').textContent=`${fmtDistance(first.distance)} · ${fmtDuration(first.duration)}`;
       document.getElementById('routeLegTwo').textContent=`${fmtDistance(second.distance)} · ${fmtDuration(second.duration)}`;
       document.getElementById('routeTotal').textContent=`${fmtDistance(first.distance+second.distance)} · ${fmtDuration(first.duration+second.duration)}`;
-      gjEta[key]=fmtDuration(first.duration+second.duration);document.querySelectorAll('[data-eta]').forEach(e=>{if(e.dataset.eta===key)e.textContent='± '+gjEta[key];});
       const fit=phase==='delivery'?[...secondCoords,...[rider,pickup]]:[...firstCoords,...secondCoords];mitraLeafletMap.fitBounds(fit,{padding:[28,28]});activeMitraRouteKey=key;
       if(auto)showToast(phase==='delivery'?'Navigasi beralih menuju pembeli.':'Pesanan diterima. Rute menuju toko ditampilkan.');
     }catch(error){console.error('Route preview:',error);document.getElementById('mitraRouteCaption').textContent=error.message||'Gagal memuat rute jalan.';showToast('Rute jalan belum dapat dimuat. Periksa koneksi internet.');}
   }
-  (function(){const b=document.getElementById('mitraPresenceBadge'),l=document.getElementById('gjPillLabel');if(b&&l){l.textContent=b.textContent;new MutationObserver(()=>{l.textContent=b.textContent;}).observe(b,{childList:true,characterData:true,subtree:true});}})();
   </script>
 
 </body>
