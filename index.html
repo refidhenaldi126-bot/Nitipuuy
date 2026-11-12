@@ -659,7 +659,22 @@
 .order-bottom>*{min-width:0}
 .order-cancel-box{flex:1 1 100%;display:flex;flex-direction:column;align-items:flex-start;gap:6px;border-top:1px dashed #f0e2d4;padding-top:10px}
 .order-cancel-box small{display:block;line-height:1.4}
-  </style>
+  
+/* Titipuuy v1.0.3 — Mitra workspace and wallet foundation */
+#mitraPage .gj-map-wrap #mitraMap{height:calc(100dvh - 150px);min-height:420px;max-height:none;border-radius:0}
+#mitraPage .gj-sheet{display:none!important}
+#mitraPage .gj-map-wrap{margin:0}
+.mitra-wallet-page{display:none;min-height:70vh;padding:0 0 105px;background:#f6f8fa}
+.mitra-wallet-page.active{display:block}
+.wallet-rating-card,.wallet-balance-card,.wallet-income-card,.wallet-transactions,.wallet-notice{margin:14px 16px;padding:18px;border-radius:18px;background:#fff;box-shadow:0 3px 14px rgba(20,35,50,.06)}
+.wallet-rating-card,.wallet-balance-card,.wallet-income-card{display:flex;flex-direction:column;gap:7px}
+.wallet-rating-card span,.wallet-balance-card span,.wallet-income-card span{font-size:.86rem;color:#66717b;font-weight:700}
+.wallet-rating-card strong,.wallet-balance-card strong,.wallet-income-card strong{font-size:1.55rem;color:#17212b;font-weight:900}
+.wallet-balance-card{background:#1769c2;color:#fff}.wallet-balance-card span,.wallet-balance-card strong,.wallet-balance-card small{color:#fff}
+.wallet-rating-card small,.wallet-balance-card small,.wallet-income-card small{font-size:.75rem;opacity:.78}
+.wallet-transactions h2{font-size:1rem;margin:0 0 12px}.wallet-empty,.wallet-notice{font-size:.82rem;line-height:1.55;color:#65717c}
+#mitraPage.active~.bottom-nav [data-nav="Dompet"]{display:flex}
+</style>
 
     <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=082">
   <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png?v=082">
@@ -884,6 +899,15 @@
         </div>
         </details>
       </div>
+    </section>
+
+    <section class="mitra-wallet-page" id="mitraWalletPage" aria-label="Dompet Mitra">
+      <div class="page-banner"><div class="eyebrow">NITIPUUY WALLET</div><h1>Dompet Mitra 💳</h1><p>Ringkasan pendapatan dan transaksi Mitra.</p></div>
+      <div class="wallet-rating-card"><span>⭐ Rating Mitra</span><strong id="mitraWalletRating">Belum tersedia</strong><small>Rating akan ditampilkan setelah data penilaian tersedia.</small></div>
+      <div class="wallet-balance-card"><span>Saldo Tersedia</span><strong id="mitraWalletAvailable">Belum tersedia</strong><small>Dana yang sudah tercatat dan siap dicairkan.</small></div>
+      <div class="wallet-income-card"><span>Total Pendapatan</span><strong id="mitraWalletTotal">Belum tersedia</strong><small>Akumulasi pendapatan bersih dari pesanan selesai.</small></div>
+      <section class="wallet-transactions"><h2>Riwayat transaksi</h2><div id="mitraWalletTransactions" class="wallet-empty">Riwayat transaksi akan muncul setelah pencatatan Wallet diaktifkan.</div></section>
+      <div class="wallet-notice">ℹ️ Pembayaran saat ini masih tunai. Angka saldo dan pendapatan belum ditampilkan sebelum pencatatan keuangan backend tersedia dan tervalidasi.</div>
     </section>
 
     <section class="profile-page" id="profilePage">
@@ -1203,26 +1227,62 @@
     const searchPage = document.getElementById('searchPage');
     const ordersPage = document.getElementById('ordersPage');
     const activityPage = document.getElementById('activityPage');
+    const mitraWalletPage=document.getElementById('mitraWalletPage');
+    function syncNavigationForRole(){
+      const isMitra=localStorage.getItem(ROLE_KEY)==='Mitra';
+      const buttons=[...document.querySelectorAll('.bottom-nav [data-nav]')];
+      if(buttons.length>=2){buttons[1].dataset.nav=isMitra?'Dompet':'Cari';buttons[1].querySelector('span').textContent=isMitra?'Dompet':'Cari';buttons[1].innerHTML=(isMitra?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>')+`<span>${isMitra?'Dompet':'Cari'}</span>`;}
+      const labels=isMitra?['Beranda','Dompet','Pesanan','Aktivitas','Profil']:['Beranda','Cari','Pesanan','Aktivitas','Profil'];
+      buttons.forEach((b,i)=>{if(labels[i])b.dataset.nav=labels[i];});
+    }
+    function renderMitraOrders(){
+      const rows=cloudMitraOrders.filter(o=>/diterima|disiapkan|perjalanan/i.test(o.status||''));
+      const banner=document.querySelector('#ordersPage .page-banner');if(banner)banner.innerHTML='<div class="eyebrow">PESANAN MITRA</div><h1>Pesanan Saya 🛵</h1><p>Pesanan yang sedang menjadi tanggung jawabmu.</p>';
+      const tabs=document.getElementById('orderTabs');if(tabs)tabs.style.display='none';
+      const list=document.getElementById('orderList');
+      list.innerHTML=rows.length?gjSortOrders(rows).map(gjOrderCard).join(''):gjEmptyHtml();
+      list.querySelectorAll('[data-mitra-action]').forEach(btn=>btn.addEventListener('click',()=>updateMitraOrder(btn.dataset.id,btn.dataset.mitraAction)));
+      list.querySelectorAll('[data-open-chat]').forEach(btn=>btn.addEventListener('click',()=>openOrderChat(btn.dataset.openChat,'mitra')));
+      list.querySelectorAll('[data-show-route]').forEach(btn=>btn.addEventListener('click',()=>showMitraOrderRoute(btn.dataset.showRoute)));
+      bindCompleteSliders(list);bindGjCards(list);
+    }
+    function renderMitraActivity(){
+      const rows=[...cloudMitraOrders].sort((a,b)=>(Number(b.updatedAt||b.createdAt)||0)-(Number(a.updatedAt||a.createdAt)||0));
+      const banner=document.querySelector('#activityPage .page-banner');if(banner)banner.innerHTML='<div class="eyebrow">RIWAYAT MITRA</div><h1>Aktivitas Saya 📋</h1><p>Riwayat pesanan yang pernah kamu tangani.</p>';
+      const list=document.getElementById('activityList');
+      list.innerHTML=rows.length?rows.map(o=>`<article class="activity-item"><div class="activity-icon">${/selesai/i.test(o.status||'')?'✅':'🛵'}</div><div class="activity-copy"><strong>${escapeHtml(o.id||'Pesanan Titipuuy')}</strong><p>${escapeHtml(o.status||'Status tidak tersedia')} · ${escapeHtml((o.items||[]).map(x=>x.name||x.title||'Item').join(', ')||'Detail pesanan')}</p><small>${o.updatedAt||o.createdAt?new Date(Number(o.updatedAt||o.createdAt)).toLocaleString('id-ID'):'Waktu tidak tersedia'}</small></div></article>`).join(''):'<div class="gj-empty"><b>Belum ada aktivitas</b>Riwayat pesanan yang kamu tangani akan muncul di sini.</div>';
+    }
+    function renderMitraWallet(){
+      // Jangan menampilkan angka keuangan rekaan: Worker belum menyediakan ledger Wallet.
+      const available=document.getElementById('mitraWalletAvailable');if(available)available.textContent='Belum tersedia';
+      const total=document.getElementById('mitraWalletTotal');if(total)total.textContent='Belum tersedia';
+      const rating=document.getElementById('mitraWalletRating');if(rating)rating.textContent='Belum tersedia';
+    }
     function navigateTo(name) {
-      const isMitra = localStorage.getItem(ROLE_KEY) === 'Mitra';
-      if (isMitra && ['Beranda','Cari','Aktivitas'].includes(name)) name = 'Dashboard';
-      if (!isMitra && name === 'Dashboard') name = 'Beranda';
-      document.querySelectorAll('[data-nav]').forEach(item => item.classList.toggle('active', item.dataset.nav === name));
-      homeContent.classList.toggle('hidden', name !== 'Beranda');
-      searchPage.classList.toggle('active', name === 'Cari');
-      profilePage.classList.toggle('active', name === 'Profil');
-      ordersPage.classList.toggle('active', name === 'Pesanan');
-      activityPage.classList.toggle('active', name === 'Aktivitas');
-      document.getElementById('mitraPage').classList.toggle('active', name === 'Dashboard');
-      if (name === 'Cari') renderSearchResults();
-      if (name === 'Pesanan') renderOrders();
-      if (name === 'Aktivitas') renderActivity();
-      if (name === 'Dashboard') renderMitraDashboard();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      if (name === 'Cari') setTimeout(() => document.getElementById('nitipuuySearchInput').focus(), 220);
+      const isMitra=localStorage.getItem(ROLE_KEY)==='Mitra';
+      syncNavigationForRole();
+      if(isMitra&&name==='Cari')name='Dompet';
+      if(!isMitra&&name==='Dompet')name='Cari';
+      const mitraHome=isMitra&&name==='Beranda';
+      document.querySelectorAll('[data-nav]').forEach(item=>item.classList.toggle('active',item.dataset.nav===name));
+      homeContent.classList.toggle('hidden',name!=='Beranda'||isMitra);
+      searchPage.classList.toggle('active',name==='Cari'&&!isMitra);
+      profilePage.classList.toggle('active',name==='Profil');
+      ordersPage.classList.toggle('active',name==='Pesanan');
+      activityPage.classList.toggle('active',name==='Aktivitas');
+      document.getElementById('mitraPage').classList.toggle('active',mitraHome);
+      mitraWalletPage.classList.toggle('active',name==='Dompet'&&isMitra);
+      if(name==='Cari'&&!isMitra)renderSearchResults();
+      if(name==='Pesanan'){if(isMitra)renderMitraOrders();else renderOrders();}
+      if(name==='Aktivitas'){if(isMitra)renderMitraActivity();else renderActivity();}
+      if(name==='Dompet'&&isMitra)renderMitraWallet();
+      if(name==='Beranda'&&isMitra)renderMitraDashboard();
+      window.scrollTo({top:0,behavior:'smooth'});
+      if(name==='Cari'&&!isMitra)setTimeout(()=>document.getElementById('nitipuuySearchInput').focus(),220);
     }
     // v1.0.1: bind each navigation button directly (no delegated/capture handler).
     // This avoids event propagation conflicts and makes the full button area clickable.
+    syncNavigationForRole();
     document.querySelectorAll('.bottom-nav [data-nav]').forEach(button=>{
       button.type='button';
       button.disabled=false;
@@ -1429,7 +1489,7 @@
         if(localStorage.getItem(ROLE_KEY)==='Mitra'){
           const data=await callNitipuuyApi('/mitra/orders',{method:'GET'});
           const all=data.orders||[];cloudBoardOrders=all.filter(o=>!o.mitraUid);cloudMitraOrders=all.filter(o=>o.mitraUid===currentFirebaseUser.uid);
-          noteOrderChanges(all,'mitra');mitraSyncError='';renderMitraDashboard();
+          noteOrderChanges(all,'mitra');mitraSyncError='';renderMitraDashboard();if(mitraWalletPage?.classList.contains('active'))renderMitraWallet();if(document.getElementById('ordersPage').classList.contains('active'))renderMitraOrders();if(document.getElementById('activityPage').classList.contains('active'))renderMitraActivity();
         }else{
           const data=await callNitipuuyApi('/orders/mine',{method:'GET'});
           const rows=data.orders||[];noteOrderChanges(rows,'buyer');cloudBuyerOrders=rows;saveRealOrders(rows);renderOrders();renderProfile();
@@ -2008,8 +2068,8 @@
     else if(event.absolute===true&&Number.isFinite(event.alpha))heading=360-event.alpha;
     if(heading===null)return;
     mitraCompassRawHeading=((heading%360)+360)%360;
-    // Kompas hanya boleh mengubah orientasi saat ada pergerakan GPS yang terdeteksi.
-    if(mitraIsMoving)setMitraHeading(mitraCompassRawHeading);
+    // Sensor perangkat hanya dicatat untuk diagnostik; tidak mengendalikan rotasi maskot.
+    // Rotasi maskot hanya berasal dari course GPS yang valid saat perangkat bergerak.
   }
   async function enableMitraCompass(){try{if(typeof DeviceOrientationEvent==='undefined'){showToast('Sensor arah/kompas tidak tersedia di perangkat ini.');return;}if(typeof DeviceOrientationEvent.requestPermission==='function'){const permission=await DeviceOrientationEvent.requestPermission();if(permission!=='granted'){showToast('Izin sensor arah belum diberikan.');return;}}if(!mitraOrientationBound){window.addEventListener('deviceorientationabsolute',handleMitraOrientation,true);mitraOrientationBound=true;window.addEventListener('deviceorientation',handleMitraOrientation,true);}showToast('Kompas aktif. Maskot akan mengikuti arah saat GPS mendeteksi HP bergerak.');}catch(error){console.warn('Compass permission:',error);showToast('Sensor arah tidak dapat diaktifkan. Periksa izin sensor/peramban.');}}
   const TITIPUUY_MAP_DEFAULT=[-6.5569,107.4439]; // initial viewport only; never treated as live location
