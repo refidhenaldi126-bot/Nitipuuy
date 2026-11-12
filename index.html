@@ -673,6 +673,15 @@
 .wallet-balance-card{background:#1769c2;color:#fff}.wallet-balance-card span,.wallet-balance-card strong,.wallet-balance-card small{color:#fff}
 .wallet-rating-card small,.wallet-balance-card small,.wallet-income-card small{font-size:.75rem;opacity:.78}
 .wallet-transactions h2{font-size:1rem;margin:0 0 12px}.wallet-empty,.wallet-notice{font-size:.82rem;line-height:1.55;color:#65717c}
+.mitra-activity-route{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:700}.mitra-activity-route span{max-width:42%;overflow-wrap:anywhere}.mitra-activity-route b{color:#c87932}.wallet-stars{font-size:1.25rem;letter-spacing:2px;color:#f2a900}
+.wallet-income-periods{margin:14px 16px;padding:18px;border-radius:18px;background:#fff;box-shadow:0 3px 14px rgba(20,35,50,.06)}
+.wallet-income-periods h2{font-size:1rem;margin:0 0 12px;color:#17212b}
+.wallet-period-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.wallet-period-grid article{min-width:0;padding:12px 9px;border-radius:12px;background:#f5f7fa;display:flex;flex-direction:column;gap:7px}
+.wallet-period-grid span{font-size:.72rem;color:#66717b;font-weight:700}
+.wallet-period-grid strong{font-size:.85rem;color:#17212b;overflow-wrap:anywhere}
+@media(max-width:380px){.wallet-period-grid{grid-template-columns:1fr}.wallet-period-grid article{flex-direction:row;justify-content:space-between;align-items:center}}
+
 #mitraPage.active~.bottom-nav [data-nav="Dompet"]{display:flex}
 </style>
 
@@ -903,11 +912,12 @@
 
     <section class="mitra-wallet-page" id="mitraWalletPage" aria-label="Dompet Mitra">
       <div class="page-banner"><div class="eyebrow">NITIPUUY WALLET</div><h1>Dompet Mitra 💳</h1><p>Ringkasan pendapatan dan transaksi Mitra.</p></div>
-      <div class="wallet-rating-card"><span>⭐ Rating Mitra</span><strong id="mitraWalletRating">Belum tersedia</strong><small>Rating akan ditampilkan setelah data penilaian tersedia.</small></div>
-      <div class="wallet-balance-card"><span>Saldo Tersedia</span><strong id="mitraWalletAvailable">Belum tersedia</strong><small>Dana yang sudah tercatat dan siap dicairkan.</small></div>
-      <div class="wallet-income-card"><span>Total Pendapatan</span><strong id="mitraWalletTotal">Belum tersedia</strong><small>Akumulasi pendapatan bersih dari pesanan selesai.</small></div>
+      <div class="wallet-rating-card"><span>⭐ Rating Mitra</span><strong id="mitraWalletRating">5,0 / 5,0</strong><div class="wallet-stars" id="mitraWalletStars" aria-label="Rating awal lima dari lima bintang">⭐⭐⭐⭐⭐</div><small>Rating awal 5 bintang. Nilai akan menyesuaikan penilaian pelanggan dan evaluasi layanan yang tercatat.</small></div>
+      <div class="wallet-balance-card"><span>Saldo Tersedia</span><strong id="mitraWalletAvailable">Belum tersedia</strong><small>Saldo bersih yang dapat dicairkan setelah kewajiban biaya layanan diperhitungkan.</small></div>
+      <div class="wallet-income-card"><span>Total Pendapatan</span><strong id="mitraWalletTotal">Belum tersedia</strong><small>Ringkasan pendapatan dari pesanan yang telah selesai.</small></div>
+      <section class="wallet-income-periods"><h2>Rincian pendapatan</h2><div class="wallet-period-grid"><article><span>Hari ini</span><strong id="mitraIncomeDaily">Belum tersedia</strong></article><article><span>Bulan ini</span><strong id="mitraIncomeMonthly">Belum tersedia</strong></article><article><span>Tahun ini</span><strong id="mitraIncomeYearly">Belum tersedia</strong></article></div></section>
       <section class="wallet-transactions"><h2>Riwayat transaksi</h2><div id="mitraWalletTransactions" class="wallet-empty">Riwayat transaksi akan muncul setelah pencatatan Wallet diaktifkan.</div></section>
-      <div class="wallet-notice">ℹ️ Pembayaran saat ini masih tunai. Angka saldo dan pendapatan belum ditampilkan sebelum pencatatan keuangan backend tersedia dan tervalidasi.</div>
+      <div class="wallet-notice">ℹ️ Pembayaran tahap awal tetap COD. Setelah pesanan selesai, biaya layanan Nitipuuy akan dicatat sebagai potongan kewajiban pada Dompet Mitra. Saldo hanya dapat dicairkan setelah perhitungan dan pencatatan backend tervalidasi.</div>
     </section>
 
     <section class="profile-page" id="profilePage">
@@ -1159,7 +1169,7 @@
           }
           if(typeof renderProfile==='function') renderProfile();
           // Pulihkan halaman sesuai mode akun yang terakhir dipilih setelah refresh.
-          if(localStorage.getItem('nitipuuy_account_mode')==='Mitra') navigateTo('Dashboard');
+          if(localStorage.getItem('nitipuuy_account_mode')==='Mitra') navigateTo('Beranda');
           else navigateTo('Beranda');
           startOrderListeners();
         }else{
@@ -1246,17 +1256,39 @@
       list.querySelectorAll('[data-show-route]').forEach(btn=>btn.addEventListener('click',()=>showMitraOrderRoute(btn.dataset.showRoute)));
       bindCompleteSliders(list);bindGjCards(list);
     }
+    function mitraShortPickup(order){
+      const item=(Array.isArray(order.items)?order.items:[]).find(x=>x&&x.place);
+      const raw=String(item?.place||order.pickupLabel||order.place||'Lokasi jemput').trim();
+      // Hanya nama toko/lokasi singkat; jangan pernah mengambil alamat lengkap dari field detail.
+      return raw.split(/[\n,]/)[0].trim().slice(0,70)||'Lokasi jemput';
+    }
+    function mitraShortDropoff(order){
+      const address=order.address||{};
+      // Gunakan label kawasan/alamat yang sengaja dibuat singkat. Field address.detail sengaja tidak dibaca.
+      const raw=String(order.dropoffLabel||address.shortLabel||address.area||address.label||'Lokasi antar').trim();
+      return raw.split(/[\n,]/)[0].trim().slice(0,70)||'Lokasi antar';
+    }
+    function mitraOrderDate(order){
+      const raw=Number(order.updatedAt||order.completedAt||order.createdAt||0);
+      if(raw>0)return new Date(raw).toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+      return String(order.date||'Tanggal tidak tersedia').split('·')[0].trim();
+    }
     function renderMitraActivity(){
-      const rows=[...cloudMitraOrders].sort((a,b)=>(Number(b.updatedAt||b.createdAt)||0)-(Number(a.updatedAt||a.createdAt)||0));
-      const banner=document.querySelector('#activityPage .page-banner');if(banner)banner.innerHTML='<div class="eyebrow">RIWAYAT MITRA</div><h1>Aktivitas Saya 📋</h1><p>Riwayat pesanan yang pernah kamu tangani.</p>';
+      const rows=[...cloudMitraOrders].sort((a,b)=>(Number(b.updatedAt||b.completedAt||b.createdAt)||0)-(Number(a.updatedAt||a.completedAt||a.createdAt)||0));
+      const banner=document.querySelector('#activityPage .page-banner');if(banner)banner.innerHTML='<div class="eyebrow">RIWAYAT MITRA</div><h1>Aktivitas Saya 📋</h1><p>Pesanan yang pernah kamu tangani dan status penyelesaiannya.</p>';
       const list=document.getElementById('activityList');
-      list.innerHTML=rows.length?rows.map(o=>`<article class="activity-item"><div class="activity-icon">${/selesai/i.test(o.status||'')?'✅':'🛵'}</div><div class="activity-copy"><strong>${escapeHtml(o.id||'Pesanan Titipuuy')}</strong><p>${escapeHtml(o.status||'Status tidak tersedia')} · ${escapeHtml((o.items||[]).map(x=>x.name||x.title||'Item').join(', ')||'Detail pesanan')}</p><small>${o.updatedAt||o.createdAt?new Date(Number(o.updatedAt||o.createdAt)).toLocaleString('id-ID'):'Waktu tidak tersedia'}</small></div></article>`).join(''):'<div class="gj-empty"><b>Belum ada aktivitas</b>Riwayat pesanan yang kamu tangani akan muncul di sini.</div>';
+      const completed=rows.filter(o=>/selesai/i.test(o.status||''));
+      list.innerHTML=completed.length?completed.map(o=>{
+        const pickup=escapeHtml(mitraShortPickup(o));const dropoff=escapeHtml(mitraShortDropoff(o));
+        return `<article class="activity-item mitra-activity-order"><div class="activity-icon">✅</div><div class="activity-copy"><strong>${escapeHtml(o.id||'ID pesanan tidak tersedia')}</strong><p class="mitra-activity-route"><span>${pickup}</span><b>→</b><span>${dropoff}</span></p><small><b>SELESAI</b> · ${escapeHtml(mitraOrderDate(o))}</small></div></article>`;
+      }).join(''):'<div class="gj-empty"><b>Belum ada pesanan selesai</b>Pesanan yang sudah kamu selesaikan akan tercatat di sini.</div>';
     }
     function renderMitraWallet(){
-      // Jangan menampilkan angka keuangan rekaan: Worker belum menyediakan ledger Wallet.
-      const available=document.getElementById('mitraWalletAvailable');if(available)available.textContent='Belum tersedia';
-      const total=document.getElementById('mitraWalletTotal');if(total)total.textContent='Belum tersedia';
-      const rating=document.getElementById('mitraWalletRating');if(rating)rating.textContent='Belum tersedia';
+      // Rating awal ditetapkan 5 bintang; nilai berikutnya akan berasal dari sistem ulasan backend.
+      const rating=document.getElementById('mitraWalletRating');if(rating)rating.textContent='5,0 / 5,0';
+      const stars=document.getElementById('mitraWalletStars');if(stars)stars.textContent='⭐⭐⭐⭐⭐';
+      // Jangan menampilkan angka keuangan rekaan sebelum Wallet Ledger tersedia.
+      ['mitraWalletAvailable','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Belum tersedia';});
     }
     function navigateTo(name) {
       const isMitra=localStorage.getItem(ROLE_KEY)==='Mitra';
@@ -1276,7 +1308,10 @@
       if(name==='Pesanan'){if(isMitra)renderMitraOrders();else renderOrders();}
       if(name==='Aktivitas'){if(isMitra)renderMitraActivity();else renderActivity();}
       if(name==='Dompet'&&isMitra)renderMitraWallet();
-      if(name==='Beranda'&&isMitra)renderMitraDashboard();
+      if(name==='Beranda'&&isMitra){
+        renderMitraDashboard();
+        requestAnimationFrame(()=>setTimeout(()=>{if(mitraLeafletMap){mitraLeafletMap.invalidateSize(true);}else{initTitipuuyMitraMap();setTimeout(()=>mitraLeafletMap?.invalidateSize(true),260);}},120));
+      }
       window.scrollTo({top:0,behavior:'smooth'});
       if(name==='Cari'&&!isMitra)setTimeout(()=>document.getElementById('nitipuuySearchInput').focus(),220);
     }
@@ -1955,7 +1990,7 @@
           openProfileForm('Pilih mode akun',
             `<div class="role-intro">Pendaftaran Mitra kamu sudah disetujui. Pilih ruang kerja yang ingin digunakan.</div>
              <label class="profile-choice role-choice"><input type="radio" name="role" value="Pembeli" ${current==='Pembeli'?'checked':''}><span>🛍️ <b>Mode Pembeli</b><small>Cari layanan dan buat pesanan.</small></span></label>
-             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;setAccountMode(chosen);setTimeout(()=>navigateTo(chosen==='Mitra'?'Dashboard':'Beranda'),80);showToast(`Mode ${chosen} aktif.`);});
+             <label class="profile-choice role-choice"><input type="radio" name="role" value="Mitra" ${current==='Mitra'?'checked':''}><span>🛵 <b>Mode Mitra</b><small>Kelola pesanan dan pengantaran.</small></span></label>`,{},fd=>{const chosen=fd.get('role');if(!['Pembeli','Mitra'].includes(chosen))return false;setAccountMode(chosen);setTimeout(()=>{syncNavigationForRole();navigateTo('Beranda');},80);showToast(`Mode ${chosen} aktif.`);});
           return;
         }
         if(applicationStatus==='pending'){
