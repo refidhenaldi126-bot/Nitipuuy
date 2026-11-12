@@ -683,6 +683,8 @@
 @media(max-width:380px){.wallet-period-grid{grid-template-columns:1fr}.wallet-period-grid article{flex-direction:row;justify-content:space-between;align-items:center}}
 
 #mitraPage.active~.bottom-nav [data-nav="Dompet"]{display:flex}
+
+    .wallet-transaction-list{display:grid;gap:10px}.wallet-transaction{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(120,130,150,.16)}.wallet-transaction>div{display:grid;gap:4px;min-width:0}.wallet-transaction b{font-size:13px}.wallet-transaction small{font-size:11px;opacity:.7}.wallet-transaction strong{white-space:nowrap;font-size:13px}.wallet-transaction .is-credit{color:#16834a}.wallet-transaction .is-debit{color:#c24b42}
 </style>
 
     <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=082">
@@ -1283,12 +1285,31 @@
         return `<article class="activity-item mitra-activity-order"><div class="activity-icon">✅</div><div class="activity-copy"><strong>${escapeHtml(o.id||'ID pesanan tidak tersedia')}</strong><p class="mitra-activity-route"><span>${pickup}</span><b>→</b><span>${dropoff}</span></p><small><b>SELESAI</b> · ${escapeHtml(mitraOrderDate(o))}</small></div></article>`;
       }).join(''):'<div class="gj-empty"><b>Belum ada pesanan selesai</b>Pesanan yang sudah kamu selesaikan akan tercatat di sini.</div>';
     }
-    function renderMitraWallet(){
-      // Rating awal ditetapkan 5 bintang; nilai berikutnya akan berasal dari sistem ulasan backend.
+    function formatWalletRupiah(value){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(value)||0);}
+    function renderWalletTransactions(rows){
+      const box=document.getElementById('mitraWalletTransactions');if(!box)return;
+      if(!Array.isArray(rows)||!rows.length){box.className='wallet-empty';box.textContent='Belum ada transaksi tercatat.';return;}
+      box.className='wallet-transaction-list';
+      box.innerHTML=rows.map(row=>{const delta=Number(row.balanceDelta)||0;const date=row.createdAt?new Date(row.createdAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'Tanggal tidak tersedia';return `<article class="wallet-transaction"><div><b>${escapeHtml(row.description||'Transaksi Dompet')}</b><small>${escapeHtml(row.orderId||row.kind||'Transaksi')} · ${escapeHtml(date)}</small></div><strong class="${delta<0?'is-debit':'is-credit'}">${delta<0?'−':'+'}${formatWalletRupiah(Math.abs(delta))}</strong></article>`;}).join('');
+    }
+    async function renderMitraWallet(){
       const rating=document.getElementById('mitraWalletRating');if(rating)rating.textContent='5,0 / 5,0';
       const stars=document.getElementById('mitraWalletStars');if(stars)stars.textContent='⭐⭐⭐⭐⭐';
-      // Jangan menampilkan angka keuangan rekaan sebelum Wallet Ledger tersedia.
-      ['mitraWalletAvailable','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Belum tersedia';});
+      ['mitraWalletAvailable','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Memuat…';});
+      const box=document.getElementById('mitraWalletTransactions');if(box){box.className='wallet-empty';box.textContent='Memuat riwayat transaksi…';}
+      try{
+        const data=await callNitipuuyApi('/mitra/wallet');const w=data.wallet||{};
+        document.getElementById('mitraWalletAvailable').textContent=formatWalletRupiah(w.availableBalance);
+        document.getElementById('mitraWalletTotal').textContent=formatWalletRupiah(w.totalIncome);
+        document.getElementById('mitraIncomeDaily').textContent=formatWalletRupiah(w.incomeToday);
+        document.getElementById('mitraIncomeMonthly').textContent=formatWalletRupiah(w.incomeMonth);
+        document.getElementById('mitraIncomeYearly').textContent=formatWalletRupiah(w.incomeYear);
+        if(Number.isFinite(Number(w.rating)))document.getElementById('mitraWalletRating').textContent=Number(w.rating).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+' / 5,0';
+        renderWalletTransactions(w.transactions||[]);
+      }catch(error){
+        ['mitraWalletAvailable','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Belum tersedia';});
+        if(box){box.className='wallet-empty';box.textContent='Data Dompet belum dapat dimuat. '+(error.message||'Periksa koneksi lalu coba lagi.');}
+      }
     }
     function navigateTo(name) {
       const isMitra=localStorage.getItem(ROLE_KEY)==='Mitra';
