@@ -670,7 +670,7 @@
 .wallet-rating-card,.wallet-balance-card,.wallet-income-card{display:flex;flex-direction:column;gap:7px}
 .wallet-rating-card span,.wallet-balance-card span,.wallet-income-card span{font-size:.86rem;color:#66717b;font-weight:700}
 .wallet-rating-card strong,.wallet-balance-card strong,.wallet-income-card strong{font-size:1.55rem;color:#17212b;font-weight:900}
-.wallet-balance-card{background:#1769c2;color:#fff}.wallet-balance-card span,.wallet-balance-card strong,.wallet-balance-card small{color:#fff}
+.wallet-operational-card{border:1px solid #dbe5ef;background:#f8fafc}.wallet-balance-card{background:#1769c2;color:#fff}.wallet-balance-card span,.wallet-balance-card strong,.wallet-balance-card small{color:#fff}
 .wallet-rating-card small,.wallet-balance-card small,.wallet-income-card small{font-size:.75rem;opacity:.78}
 .wallet-transactions h2{font-size:1rem;margin:0 0 12px}.wallet-empty,.wallet-notice{font-size:.82rem;line-height:1.55;color:#65717c}
 .mitra-activity-route{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:700}.mitra-activity-route span{max-width:42%;overflow-wrap:anywhere}.mitra-activity-route b{color:#c87932}.wallet-stars{font-size:1.25rem;letter-spacing:2px;color:#f2a900}
@@ -915,11 +915,12 @@
     <section class="mitra-wallet-page" id="mitraWalletPage" aria-label="Dompet Mitra">
       <div class="page-banner"><div class="eyebrow">NITIPUUY WALLET</div><h1>Dompet Mitra 💳</h1><p>Ringkasan pendapatan dan transaksi Mitra.</p></div>
       <div class="wallet-rating-card"><span>⭐ Rating Mitra</span><strong id="mitraWalletRating">5,0 / 5,0</strong><div class="wallet-stars" id="mitraWalletStars" aria-label="Rating awal lima dari lima bintang">⭐⭐⭐⭐⭐</div><small>Rating awal 5 bintang. Nilai akan menyesuaikan penilaian pelanggan dan evaluasi layanan yang tercatat.</small></div>
-      <div class="wallet-balance-card"><span>Saldo Tersedia</span><strong id="mitraWalletAvailable">Belum tersedia</strong><small>Saldo bersih yang dapat dicairkan setelah kewajiban biaya layanan diperhitungkan.</small></div>
+      <div class="wallet-balance-card"><span>Saldo Pendapatan</span><strong id="mitraWalletAvailable">Belum tersedia</strong><small>Akumulasi hak pendapatan Mitra. Penarikan akan tersedia setelah fitur pencairan diaktifkan.</small></div>
+      <div class="wallet-income-card wallet-operational-card"><span>Saldo Operasional</span><strong id="mitraWalletOperational">Belum tersedia</strong><small>Dana untuk memenuhi kewajiban biaya layanan Nitipuuy. Top up belum diaktifkan.</small></div>
       <div class="wallet-income-card"><span>Total Pendapatan</span><strong id="mitraWalletTotal">Belum tersedia</strong><small>Ringkasan pendapatan dari pesanan yang telah selesai.</small></div>
       <section class="wallet-income-periods"><h2>Rincian pendapatan</h2><div class="wallet-period-grid"><article><span>Hari ini</span><strong id="mitraIncomeDaily">Belum tersedia</strong></article><article><span>Bulan ini</span><strong id="mitraIncomeMonthly">Belum tersedia</strong></article><article><span>Tahun ini</span><strong id="mitraIncomeYearly">Belum tersedia</strong></article></div></section>
       <section class="wallet-transactions"><h2>Riwayat transaksi</h2><div id="mitraWalletTransactions" class="wallet-empty">Riwayat transaksi akan muncul setelah pencatatan Wallet diaktifkan.</div></section>
-      <div class="wallet-notice">ℹ️ Pembayaran tahap awal tetap COD. Setelah pesanan selesai, biaya layanan Nitipuuy akan dicatat sebagai potongan kewajiban pada Dompet Mitra. Saldo hanya dapat dicairkan setelah perhitungan dan pencatatan backend tervalidasi.</div>
+      <div class="wallet-notice">ℹ️ Dompet memisahkan Saldo Pendapatan dan Saldo Operasional. Pembayaran tahap awal tetap COD. Top up, pemotongan biaya layanan, dan penarikan belum diaktifkan sampai integrasi backend serta penyedia pembayaran tervalidasi.</div>
     </section>
 
     <section class="profile-page" id="profilePage">
@@ -1295,11 +1296,12 @@
     async function renderMitraWallet(){
       const rating=document.getElementById('mitraWalletRating');if(rating)rating.textContent='5,0 / 5,0';
       const stars=document.getElementById('mitraWalletStars');if(stars)stars.textContent='⭐⭐⭐⭐⭐';
-      ['mitraWalletAvailable','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Memuat…';});
+      ['mitraWalletAvailable','mitraWalletOperational','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Memuat…';});
       const box=document.getElementById('mitraWalletTransactions');if(box){box.className='wallet-empty';box.textContent='Memuat riwayat transaksi…';}
       try{
         const data=await callNitipuuyApi('/mitra/wallet');const w=data.wallet||{};
-        document.getElementById('mitraWalletAvailable').textContent=formatWalletRupiah(w.availableBalance);
+        document.getElementById('mitraWalletAvailable').textContent=formatWalletRupiah(w.incomeBalance ?? w.availableBalance);
+        document.getElementById('mitraWalletOperational').textContent=formatWalletRupiah(w.operationalBalance);
         document.getElementById('mitraWalletTotal').textContent=formatWalletRupiah(w.totalIncome);
         document.getElementById('mitraIncomeDaily').textContent=formatWalletRupiah(w.incomeToday);
         document.getElementById('mitraIncomeMonthly').textContent=formatWalletRupiah(w.incomeMonth);
@@ -1307,7 +1309,7 @@
         if(Number.isFinite(Number(w.rating)))document.getElementById('mitraWalletRating').textContent=Number(w.rating).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+' / 5,0';
         renderWalletTransactions(w.transactions||[]);
       }catch(error){
-        ['mitraWalletAvailable','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Belum tersedia';});
+        ['mitraWalletAvailable','mitraWalletOperational','mitraWalletTotal','mitraIncomeDaily','mitraIncomeMonthly','mitraIncomeYearly'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Belum tersedia';});
         if(box){box.className='wallet-empty';box.textContent='Data Dompet belum dapat dimuat. '+(error.message||'Periksa koneksi lalu coba lagi.');}
       }
     }
